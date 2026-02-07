@@ -1,0 +1,67 @@
+{
+  "name": "@coolblack/xcode-mcp",
+  "version": "1.1.0",
+  "description": "Complete Xcode automation MCP server for iOS, macOS, watchOS, tvOS, and visionOS development. Build, test, sign, and deploy Apple apps with AI.",
+  "type": "module",
+  "main": "build/index.js",
+  "bin": {
+    "coolblack-xcode-mcp": "build/index.js"
+  },
+  "scripts": {
+    "build": "tsc && chmod 755 build/index.js",
+    "dev": "tsc --watch",
+    "clean": "rm -rf build",
+    "prepublishOnly": "npm run build"
+  },
+  "files": [
+    "build/",
+    "scripts/install.sh",
+    "README.md",
+    "LICENSE"
+  ],
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.12.0",
+    "zod": "^3.23.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "typescript": "^5.3.0"
+  },
+  "keywords": [
+    "xcode",
+    "mcp",
+    "ios",
+    "macos",
+    "watchos",
+    "tvos",
+    "visionos",
+    "automation",
+    "build",
+    "testing",
+    "simulator",
+    "model-context-protocol",
+    "claude",
+    "ai",
+    "apple",
+    "swift",
+    "swiftui",
+    "coolblack"
+  ],
+  "author": {
+    "name": "Dirk Nesner",
+    "email": "dirk.nesner@gmail.com",
+    "url": "https://coolblack.gmbh"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/coolblack-gmbh/xcode-mcp.git"
+  },
+  "homepage": "https://github.com/coolblack-gmbh/xcode-mcp#readme",
+  "bugs": {
+    "url": "https://github.com/coolblack-gmbh/xcode-mcp/issues"
+  },
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

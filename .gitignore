@@ -1,0 +1,27 @@
+# Dependencies
+node_modules/
+
+# Build output
+build/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log
+npm-debug.log*
+
+# Environment
+.env
+.env.local
+
+# Test output
+coverage/
+*.xcresult
