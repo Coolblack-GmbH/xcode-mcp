@@ -36,6 +36,18 @@ Before installing xcode-mcp, ensure you have:
   - - **Node.js 18+** - Download from [nodejs.org](https://nodejs.org)
     - - **Command Line Tools** - Run `xcode-select --install` if not already installed
      
+      - ### Claude/Anthropic Account
+     
+      - To use xcode-mcp, you'll need:
+     
+      - - **Anthropic Account** - Create free at [anthropic.com](https://anthropic.com)
+        - - **Claude Code or Claude Desktop** - Access to Claude with MCP support
+          -   - Claude Code: Available in supported regions via [claude.ai](https://claude.ai)
+              -   - Claude Desktop: Available for macOS via [claude.ai/download](https://claude.ai/download)
+                  - - **API Key** (for CLI usage) - Generate at [console.anthropic.com/api/keys](https://console.anthropic.com/api/keys)
+                   
+                    - > **Note**: xcode-mcp is designed to work with Claude Code and Claude Desktop. The automatic installer will help you register the MCP server with Claude Code.
+     
       - ### Installation Methods
      
       - Choose the installation method that best suits your workflow:
