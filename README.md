@@ -44,9 +44,8 @@ Before installing xcode-mcp, ensure you have:
         - - **Claude Code or Claude Desktop** - Access to Claude with MCP support
           -   - Claude Code: Available in supported regions via [claude.ai](https://claude.ai)
               -   - Claude Desktop: Available for macOS via [claude.ai/download](https://claude.ai/download)
-                  - - **API Key** (for CLI usage) - Generate at [console.anthropic.com/api/keys](https://console.anthropic.com/api/keys)
-                   
-                    - > **Note**: xcode-mcp is designed to work with Claude Code and Claude Desktop. The automatic installer will help you register the MCP server with Claude Code.
+              
+                    - **Claude Pro or Max subscription** (recommended) - Provides higher usage limits and better performance for MCP toolsinstaller will help you register the MCP server with Claude Code.
      
       - ### Installation Methods
      
