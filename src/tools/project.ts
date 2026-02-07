@@ -62,7 +62,7 @@ const createProject: ToolDefinition = {
       const platform = args.platform as Platform;
       const language = args.language as Language;
       const bundleId = args.bundleId as string;
-      const organizationName = (args.organizationName as string) || 'Organization';
+      const organizationName = (args.organizationName as string) || 'coolblack';
       const outputPath = (args.outputPath as string) || process.cwd();
 
       logger.info(`Creating project: ${name} for ${platform}`);
@@ -560,6 +560,23 @@ function generateProjectYml(
 
   const destination = destinationMap[platform];
 
+  // Platform-specific Info.plist properties
+  const infoPlistProps = platform === 'iOS' ? `
+      UILaunchScreen: {}
+      UISupportedInterfaceOrientations:
+        - UIInterfaceOrientationPortrait
+        - UIInterfaceOrientationLandscapeLeft
+        - UIInterfaceOrientationLandscapeRight
+      UISupportedInterfaceOrientations~ipad:
+        - UIInterfaceOrientationPortrait
+        - UIInterfaceOrientationPortraitUpsideDown
+        - UIInterfaceOrientationLandscapeLeft
+        - UIInterfaceOrientationLandscapeRight
+      UIApplicationSupportsIndirectInputEvents: true
+      UIApplicationSceneManifest:
+        UIApplicationSupportsMultipleScenes: false
+        UISceneConfigurations: {}` : '';
+
   return `name: ${name}
 options:
   bundleIdPrefix: ${bundleId.substring(0, bundleId.lastIndexOf('.'))}
@@ -582,13 +599,14 @@ targets:
       - ${name}
     settings:
       PRODUCT_NAME: ${name}
-      GENERATE_INFOPLIST_FILE: "YES"
-      INFOPLIST_KEY_CFBundleDisplayName: ${name}
-      INFOPLIST_KEY_UIApplicationSceneManifest_Generation: "YES"
-      INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents: "YES"
-      INFOPLIST_KEY_UILaunchScreen_Generation: "YES"
-      INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad: "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight"
-      INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone: "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight"
+      PRODUCT_BUNDLE_IDENTIFIER: ${bundleId}
+    info:
+      path: ${name}/Info.plist
+      properties:
+        CFBundleName: ${name}
+        CFBundleDisplayName: ${name}
+        CFBundleShortVersionString: "1.0"
+        CFBundleVersion: "1"${infoPlistProps}
     scheme:
       testTargets: []
       gatherCoverageData: false

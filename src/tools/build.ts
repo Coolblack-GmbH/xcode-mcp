@@ -498,13 +498,39 @@ const runOnSimulator: ToolDefinition = {
       // Check if iOS simulator runtime is available (SDK alone is not enough)
       const runtimeCheck = await checkSimulatorRuntime('iOS');
       if (!runtimeCheck.available) {
+        // Check if a download might be in progress
+        let downloadStatus = 'unknown';
+        try {
+          const diskResult = await execCommand('xcrun', ['simctl', 'runtime', 'list'], { timeout: 10000 });
+          if (diskResult.exitCode === 0) {
+            const output = diskResult.stdout;
+            if (output.includes('Total Disk Images: 0')) {
+              downloadStatus = 'not_started';
+            } else if (output.includes('Downloading') || output.includes('%')) {
+              downloadStatus = 'downloading';
+            } else if (output.includes('Ready')) {
+              downloadStatus = 'ready';
+            }
+          }
+        } catch { /* ignore */ }
+
+        const downloadHint = downloadStatus === 'downloading'
+          ? 'Ein Download laeuft bereits. Verwende "check-download-status" um den Fortschritt zu pruefen. Warte bis der Download abgeschlossen ist, dann versuche es erneut.'
+          : downloadStatus === 'not_started'
+            ? 'Starte den Download mit: download-platform (platform="iOS"). Der Download ist ca. 7-8 GB gross und dauert je nach Internetverbindung 10-30 Minuten. Verwende "check-download-status" um den Fortschritt zu ueberwachen.'
+            : 'Verwende "download-platform" mit platform="iOS" um die Runtime herunterzuladen, oder "check-download-status" um den aktuellen Status zu pruefen.';
+
         return {
           success: false,
-          error: runtimeCheck.error || 'iOS Simulator-Runtime nicht verfuegbar. Bitte ausfuehren: xcodebuild -downloadPlatform iOS',
+          error: `iOS Simulator-Runtime ist nicht installiert. Ohne Runtime kann kein Simulator gestartet werden.\n\n${downloadHint}`,
           data: {
             sdkVersion: runtimeCheck.sdkVersion,
             installedRuntimes: runtimeCheck.runtimeVersion,
-            hint: "Verwende das MCP-Tool 'download-platform' mit platform=\"iOS\" um die Runtime herunterzuladen.",
+            downloadStatus,
+            actions: [
+              'download-platform (platform="iOS") -- Runtime herunterladen (~7-8 GB)',
+              'check-download-status -- Fortschritt pruefen',
+            ],
           },
           executionTime: Date.now() - startTime,
         };

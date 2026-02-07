@@ -537,6 +537,99 @@ const downloadPlatform: ToolDefinition = {
 };
 
 /**
+ * Check-download-status tool
+ * Check status of platform SDK and simulator runtime downloads
+ */
+const checkDownloadStatus: ToolDefinition = {
+  name: 'check-download-status',
+  description: 'Check the download/installation status of platform SDKs and simulator runtimes. Shows which platforms and runtimes are installed, downloading, or missing. Use this to monitor long-running downloads.',
+  inputSchema: {
+    type: 'object',
+    properties: {
+      platform: {
+        type: 'string',
+        enum: ['iOS', 'watchOS', 'tvOS', 'visionOS', 'all'],
+        description: 'Platform to check. Defaults to "all".',
+      },
+    },
+  },
+  handler: async (args: Record<string, unknown>): Promise<ToolResult> => {
+    const startTime = Date.now();
+    const platform = (args.platform as string) || 'all';
+
+    try {
+      const platforms = platform === 'all'
+        ? ['iOS', 'watchOS', 'tvOS', 'visionOS']
+        : [platform];
+
+      const results: Record<string, unknown> = {};
+
+      for (const p of platforms) {
+        const sdkCheck = await checkPlatformSDK(p);
+        const runtimeCheck = await checkSimulatorRuntime(p);
+
+        results[p] = {
+          sdk: {
+            installed: sdkCheck.installed,
+            sdkPath: sdkCheck.sdkPath || null,
+            error: sdkCheck.error || null,
+          },
+          simulatorRuntime: {
+            installed: runtimeCheck.available,
+            sdkVersion: runtimeCheck.sdkVersion || null,
+            runtimeVersion: runtimeCheck.runtimeVersion || null,
+            error: runtimeCheck.error || null,
+          },
+        };
+      }
+
+      // Also check for active downloads via simctl runtime list
+      let diskImageInfo = '';
+      try {
+        const diskResult = await execCommand('xcrun', ['simctl', 'runtime', 'list'], { timeout: 10000 });
+        if (diskResult.exitCode === 0) {
+          diskImageInfo = diskResult.stdout;
+        }
+      } catch { /* ignore */ }
+
+      // Generate summary
+      const summary: string[] = [];
+      for (const [p, info] of Object.entries(results)) {
+        const pInfo = info as Record<string, Record<string, unknown>>;
+        const sdkOk = pInfo.sdk.installed as boolean;
+        const rtOk = pInfo.simulatorRuntime.installed as boolean;
+
+        if (sdkOk && rtOk) {
+          summary.push(`${p}: SDK + Runtime installed -- ready to use`);
+        } else if (sdkOk && !rtOk) {
+          summary.push(`${p}: SDK installed, Runtime MISSING -- run download-platform or xcodebuild -downloadPlatform ${p}`);
+        } else if (!sdkOk) {
+          summary.push(`${p}: SDK MISSING -- run download-platform tool`);
+        }
+      }
+
+      return {
+        success: true,
+        data: {
+          platforms: results,
+          diskImages: diskImageInfo || 'No active disk image downloads detected',
+          summary,
+        },
+        executionTime: Date.now() - startTime,
+      };
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      return {
+        success: false,
+        error: `Failed to check download status: ${errorMsg}`,
+        data: null,
+        executionTime: Date.now() - startTime,
+      };
+    }
+  },
+};
+
+/**
  * Export all setup tools
  */
 export const tools: ToolDefinition[] = [
@@ -545,6 +638,7 @@ export const tools: ToolDefinition[] = [
   installXcodegen,
   checkCocoapods,
   downloadPlatform,
+  checkDownloadStatus,
 ];
 
 export default tools;

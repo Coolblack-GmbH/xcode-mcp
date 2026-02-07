@@ -49,16 +49,16 @@
   ],
   "author": {
     "name": "Dirk Nesner",
-    "email": "dirk.nesner@gmail.com",
+    "email": "nesner@coolblack.gmbh",
     "url": "https://coolblack.gmbh"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/coolblack-gmbh/xcode-mcp.git"
+    "url": "https://github.com/Coolblack-GmbH/xcode-mcp.git"
   },
-  "homepage": "https://github.com/coolblack-gmbh/xcode-mcp#readme",
+  "homepage": "https://github.com/Coolblack-GmbH/xcode-mcp#readme",
   "bugs": {
-    "url": "https://github.com/coolblack-gmbh/xcode-mcp/issues"
+    "url": "https://github.com/Coolblack-GmbH/xcode-mcp/issues"
   },
   "license": "MIT",
   "engines": {

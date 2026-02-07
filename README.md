@@ -5,7 +5,7 @@
 
 <p align="center">
   <a href="#installation">Installation</a> |
-  <a href="#tools-58-total">58 Tools</a> |
+  <a href="#tools-59-total">59 Tools</a> |
   <a href="#deutsche-zusammenfassung">Deutsch</a> |
   <a href="https://coolblack.gmbh">coolblack.gmbh</a>
 </p>
@@ -18,7 +18,7 @@
 
 A full-featured [Model Context Protocol](https://modelcontextprotocol.io) (MCP) server that gives AI assistants complete control over Xcode. Create projects, build, test, sign, profile, and deploy Apple apps across all platforms -- entirely through natural language.
 
-Built by **[Dirk Nesner](mailto:dirk.nesner@gmail.com)** at **[coolblack GmbH](https://coolblack.gmbh)**.
+Built by **[Dirk Nesner](mailto:nesner@coolblack.gmbh)** at **[coolblack](https://coolblack.gmbh)**.
 
 **Supported platforms:** iOS, macOS, watchOS, tvOS, visionOS
 **Works with:** Claude Code, Claude Desktop, any MCP-compatible client
@@ -32,28 +32,27 @@ Built by **[Dirk Nesner](mailto:dirk.nesner@gmail.com)** at **[coolblack GmbH](h
 Before installing xcode-mcp, ensure you have:
 
 - **macOS** (latest version recommended)
-- - **Xcode 16+** - Install from App Store
-  - - **Node.js 18+** - Download from [nodejs.org](https://nodejs.org)
-    - - **Command Line Tools** - Run `xcode-select --install` if not already installed
-     
-      - ### Claude/Anthropic Account
-     
-      - To use xcode-mcp, you'll need:
-     
-      - - **Anthropic Account** - Create free at [anthropic.com](https://anthropic.com)
-        - - **Claude Code or Claude Desktop** - Access to Claude with MCP support
-          -   - Claude Code: Available in supported regions via [claude.ai](https://claude.ai)
-              -   - Claude Desktop: Available for macOS via [claude.ai/download](https://claude.ai/download)
-              
-                    - **Claude Pro or Max subscription** (recommended) - Provides higher usage limits and better performance for MCP toolsinstaller will help you register the MCP server with Claude Code.
-     
-      - ### Installation Methods
-     
-      - Choose the installation method that best suits your workflow:
+- **Xcode 16+** - Install from App Store
+- **Node.js 18+** - Download from [nodejs.org](https://nodejs.org)
+- **Command Line Tools** - Run `xcode-select --install` if not already installed
+
+### Claude/Anthropic Account
+
+To use xcode-mcp, you'll need:
+
+- **Anthropic Account** - Create free at [anthropic.com](https://anthropic.com)
+- **Claude Code or Claude Desktop** - Access to Claude with MCP support
+  - Claude Code: Available in supported regions via [claude.ai](https://claude.ai)
+  - Claude Desktop: Available for macOS via [claude.ai/download](https://claude.ai/download)
+- **Claude Pro or Max subscription** (recommended) - Provides higher usage limits and better performance for MCP tools
+
+### Installation Methods
+
+Choose the installation method that best suits your workflow:
 ### One-Line Install (recommended)
 
 ```bash
-git clone https://github.com/coolblack-gmbh/xcode-mcp.git
+git clone https://github.com/Coolblack-GmbH/xcode-mcp.git
 cd xcode-mcp
 ./scripts/install.sh
 ```
@@ -107,7 +106,6 @@ Once installed, just ask Claude in natural language:
 "Set up a GitHub Actions CI/CD pipeline"
 ```
 
-
 ## Troubleshooting
 
 ### Common Issues
@@ -120,37 +118,36 @@ chmod +x scripts/install.sh
 
 #### Node.js not found
 - Verify Node.js installation: `node --version`
-- - If missing, install from [nodejs.org](https://nodejs.org)
-  - - Restart your terminal after installation
-   
-    - #### Xcode Command Line Tools not installed
-    - ```bash
-      xcode-select --install
-      ```
+- If missing, install from [nodejs.org](https://nodejs.org)
+- Restart your terminal after installation
 
-      #### "Cannot find module" errors after installation
-      ```bash
-      npm install
-      npm run build
-      ```
+#### Xcode Command Line Tools not installed
+```bash
+xcode-select --install
+```
 
-      #### Claude Desktop config not recognized
-      - Ensure the path to `build/index.js` is absolute (not relative)
-      - - Use the full path: `/Users/yourusername/path/to/xcode-mcp/build/index.js`
-        - - Restart Claude Desktop after updating the config
-         
-          - ### Getting Help
-         
-          - If you encounter issues:
-          - 1. Check the error message for clues about what's missing
-            2. 2. Verify all prerequisites are installed
-               3. 3. Try reinstalling with the automatic install script
-                  4. 4. Open an issue on [GitHub](https://github.com/Coolblack-GmbH/xcode-mcp/issues)
-                    
-                     5. 
-## Tools (58 total)
+#### "Cannot find module" errors after installation
+```bash
+npm install
+npm run build
+```
 
-### Setup (5)
+#### Claude Desktop config not recognized
+- Ensure the path to `build/index.js` is absolute (not relative)
+- Use the full path: `/Users/yourusername/path/to/xcode-mcp/build/index.js`
+- Restart Claude Desktop after updating the config
+
+### Getting Help
+
+If you encounter issues:
+1. Check the error message for clues about what's missing
+2. Verify all prerequisites are installed
+3. Try reinstalling with the automatic install script
+4. Open an issue on [GitHub](https://github.com/Coolblack-GmbH/xcode-mcp/issues)
+
+## Tools (59 total)
+
+### Setup (6)
 
 | Tool | Description |
 |------|-------------|
@@ -159,6 +156,7 @@ chmod +x scripts/install.sh
 | `install-xcodegen` | Install or upgrade XcodeGen via Homebrew |
 | `check-cocoapods` | Check CocoaPods status, optionally upgrade |
 | `download-platform` | Download platform SDK (iOS, watchOS, tvOS, visionOS) |
+| `check-download-status` | Check SDK and simulator runtime download/installation status |
 
 ### Project Management (5)
 
@@ -274,7 +272,7 @@ The server also provides MCP resources for direct data access (`xcode://project/
   src/
     index.ts              # Server entry point (StdioServerTransport)
     types.ts              # Shared TypeScript types
-    tools/                # 11 tool modules (58 tools total)
+    tools/                # 11 tool modules (59 tools total)
     resources/            # MCP resource providers
     prompts/              # Workflow prompt templates
     utils/
@@ -308,7 +306,7 @@ See the [Developer Guide](docs/DEVELOPMENT.md) for detailed instructions on exte
 
 ### Highlights
 
-- **58 Tools** fuer alle Aspekte der Apple-Entwicklung
+- **59 Tools** fuer alle Aspekte der Apple-Entwicklung
 - **Automatische Installation** mit einem einzigen Befehl
 - **Xcode 26+ kompatibel** -- erkennt automatisch fehlende SDKs und Simulator-Runtimes
 - **Simulator-Automation** -- baut, installiert und startet Apps vollautomatisch
@@ -317,7 +315,7 @@ See the [Developer Guide](docs/DEVELOPMENT.md) for detailed instructions on exte
 ### Schnellstart
 
 ```bash
-git clone https://github.com/coolblack-gmbh/xcode-mcp.git
+git clone https://github.com/Coolblack-GmbH/xcode-mcp.git
 cd xcode-mcp
 ./scripts/install.sh
 ```
@@ -330,15 +328,15 @@ Danach einfach Claude fragen: *"Erstelle eine neue SwiftUI-App namens MeineApp u
 
 MIT License -- see [LICENSE](LICENSE) for full terms including the **Beta Software Notice**.
 
-This software is provided "as is" without warranty. The authors and coolblack GmbH assume no liability for damages arising from its use. This software interacts with Xcode, code signing, and build tools -- always verify critical operations independently. / Diese Software wird ohne Gewaehrleistung bereitgestellt. Die Autoren und die coolblack GmbH uebernehmen keine Haftung. Kritische Vorgaenge stets unabhaengig pruefen.
+This software is provided "as is" without warranty. The authors and coolblack assume no liability for damages arising from its use. This software interacts with Xcode, code signing, and build tools -- always verify critical operations independently. / Diese Software wird ohne Gewaehrleistung bereitgestellt. Die Autoren und die coolblack uebernehmen keine Haftung. Kritische Vorgaenge stets unabhaengig pruefen.
 
 ## Author
 
 **Dirk Nesner**
-[coolblack GmbH](https://coolblack.gmbh) | [dirk.nesner@gmail.com](mailto:dirk.nesner@gmail.com)
+[coolblack](https://coolblack.gmbh) | [nesner@coolblack.gmbh](mailto:nesner@coolblack.gmbh)
 
 ---
 
 <p align="center">
-  <sub>Made with care by <a href="https://coolblack.gmbh">coolblack GmbH</a></sub>
+  <sub>Made with care by <a href="https://coolblack.gmbh">coolblack</a></sub>
 </p>
