@@ -26,29 +26,6 @@ Built by **[Dirk Nesner](mailto:nesner@coolblack.gmbh)** at **[coolblack](https:
 
 ## Installation
 
-
-### Prerequisites
-
-Before installing xcode-mcp, ensure you have:
-
-- **macOS** (latest version recommended)
-- **Xcode 16+** - Install from App Store
-- **Node.js 18+** - Download from [nodejs.org](https://nodejs.org)
-- **Command Line Tools** - Run `xcode-select --install` if not already installed
-
-### Claude/Anthropic Account
-
-To use xcode-mcp, you'll need:
-
-- **Anthropic Account** - Create free at [anthropic.com](https://anthropic.com)
-- **Claude Code or Claude Desktop** - Access to Claude with MCP support
-  - Claude Code: Available in supported regions via [claude.ai](https://claude.ai)
-  - Claude Desktop: Available for macOS via [claude.ai/download](https://claude.ai/download)
-- **Claude Pro or Max subscription** (recommended) - Provides higher usage limits and better performance for MCP tools
-
-### Installation Methods
-
-Choose the installation method that best suits your workflow:
 ### One-Line Install (recommended)
 
 ```bash
@@ -58,6 +35,22 @@ cd xcode-mcp
 ```
 
 The installer automatically checks and installs all prerequisites (Xcode CLI Tools, Homebrew, Node.js, XcodeGen, CocoaPods, Claude Code) and registers the MCP server.
+
+> **Note:** The installation may take some time depending on your setup. Xcode platform SDKs and Simulator Runtimes are several gigabytes each and can require 10--30 minutes to download. The installer will show progress where possible.
+>
+> **Hinweis:** Die Installation kann je nach Setup etwas dauern. Xcode-SDKs und Simulator-Runtimes sind mehrere Gigabyte gross und koennen 10--30 Minuten fuer den Download benoetigen.
+
+### Important: After Installation
+
+After the installer finishes, you **must restart Claude Code** for the MCP server to be recognized:
+
+1. **Start** Claude Code (or Claude Desktop)
+2. **Quit** Claude Code completely
+3. **Start** Claude Code again
+
+Without this restart cycle, Claude will not detect the new MCP tools. This is a one-time step -- after the initial restart, the server will be available automatically in every future session.
+
+> **Wichtig:** Nach der Installation muss Claude Code einmal gestartet, komplett beendet und erneut gestartet werden. Erst dann werden die MCP-Tools erkannt. Dies ist nur einmalig noetig.
 
 ### Manual Setup
 
@@ -105,45 +98,6 @@ Once installed, just ask Claude in natural language:
 "Archive the app and export an IPA for App Store distribution"
 "Set up a GitHub Actions CI/CD pipeline"
 ```
-
-## Troubleshooting
-
-### Common Issues
-
-#### "install.sh not found" or "Permission denied"
-```bash
-chmod +x scripts/install.sh
-./scripts/install.sh
-```
-
-#### Node.js not found
-- Verify Node.js installation: `node --version`
-- If missing, install from [nodejs.org](https://nodejs.org)
-- Restart your terminal after installation
-
-#### Xcode Command Line Tools not installed
-```bash
-xcode-select --install
-```
-
-#### "Cannot find module" errors after installation
-```bash
-npm install
-npm run build
-```
-
-#### Claude Desktop config not recognized
-- Ensure the path to `build/index.js` is absolute (not relative)
-- Use the full path: `/Users/yourusername/path/to/xcode-mcp/build/index.js`
-- Restart Claude Desktop after updating the config
-
-### Getting Help
-
-If you encounter issues:
-1. Check the error message for clues about what's missing
-2. Verify all prerequisites are installed
-3. Try reinstalling with the automatic install script
-4. Open an issue on [GitHub](https://github.com/Coolblack-GmbH/xcode-mcp/issues)
 
 ## Tools (59 total)
 
@@ -319,6 +273,10 @@ git clone https://github.com/Coolblack-GmbH/xcode-mcp.git
 cd xcode-mcp
 ./scripts/install.sh
 ```
+
+**Wichtig nach der Installation:** Claude Code einmal starten, komplett beenden und erneut starten -- erst dann werden die MCP-Tools erkannt (einmalig).
+
+**Hinweis zur Dauer:** Die Installation kann je nach Internetverbindung laenger dauern, da Xcode-SDKs und Simulator-Runtimes mehrere Gigabyte gross sind (10--30 Minuten Download).
 
 Danach einfach Claude fragen: *"Erstelle eine neue SwiftUI-App namens MeineApp und starte sie auf dem Simulator."*
 
