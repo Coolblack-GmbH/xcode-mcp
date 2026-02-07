@@ -26,6 +26,19 @@ Built by **[Dirk Nesner](mailto:dirk.nesner@gmail.com)** at **[coolblack GmbH](h
 
 ## Installation
 
+
+### Prerequisites
+
+Before installing xcode-mcp, ensure you have:
+
+- **macOS** (latest version recommended)
+- - **Xcode 16+** - Install from App Store
+  - - **Node.js 18+** - Download from [nodejs.org](https://nodejs.org)
+    - - **Command Line Tools** - Run `xcode-select --install` if not already installed
+     
+      - ### Installation Methods
+     
+      - Choose the installation method that best suits your workflow:
 ### One-Line Install (recommended)
 
 ```bash
@@ -83,6 +96,47 @@ Once installed, just ask Claude in natural language:
 "Set up a GitHub Actions CI/CD pipeline"
 ```
 
+
+## Troubleshooting
+
+### Common Issues
+
+#### "install.sh not found" or "Permission denied"
+```bash
+chmod +x scripts/install.sh
+./scripts/install.sh
+```
+
+#### Node.js not found
+- Verify Node.js installation: `node --version`
+- - If missing, install from [nodejs.org](https://nodejs.org)
+  - - Restart your terminal after installation
+   
+    - #### Xcode Command Line Tools not installed
+    - ```bash
+      xcode-select --install
+      ```
+
+      #### "Cannot find module" errors after installation
+      ```bash
+      npm install
+      npm run build
+      ```
+
+      #### Claude Desktop config not recognized
+      - Ensure the path to `build/index.js` is absolute (not relative)
+      - - Use the full path: `/Users/yourusername/path/to/xcode-mcp/build/index.js`
+        - - Restart Claude Desktop after updating the config
+         
+          - ### Getting Help
+         
+          - If you encounter issues:
+          - 1. Check the error message for clues about what's missing
+            2. 2. Verify all prerequisites are installed
+               3. 3. Try reinstalling with the automatic install script
+                  4. 4. Open an issue on [GitHub](https://github.com/Coolblack-GmbH/xcode-mcp/issues)
+                    
+                     5. 
 ## Tools (58 total)
 
 ### Setup (5)
