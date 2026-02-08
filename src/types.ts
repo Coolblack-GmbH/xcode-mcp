@@ -32,6 +32,10 @@ export interface ToolResult {
   error?: string;
   warnings?: string[];
   executionTime: number;
+  /** Optional base64-encoded image to include in the MCP response (e.g., simulator screenshots) */
+  _imageBase64?: string;
+  /** MIME type of the image (e.g., 'image/png') */
+  _imageMimeType?: string;
 }
 
 // XcodeProject

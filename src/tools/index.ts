@@ -80,13 +80,26 @@ export function registerTools(server: Server): void {
     try {
       const result = (await tool.handler(args || {})) as ToolResult;
 
+      // Build content blocks: always include text, optionally include image
+      const content: Array<{ type: string; text?: string; data?: string; mimeType?: string }> = [
+        {
+          type: 'text',
+          text: JSON.stringify(result, null, 2),
+        },
+      ];
+
+      // If the tool returned an image (e.g., simulator screenshot), add it as image content
+      if (result._imageBase64 && result._imageMimeType) {
+        content.push({
+          type: 'image',
+          data: result._imageBase64,
+          mimeType: result._imageMimeType,
+        });
+        logger.info(`Tool ${name} returned image content (${result._imageMimeType})`);
+      }
+
       return {
-        content: [
-          {
-            type: 'text',
-            text: JSON.stringify(result, null, 2),
-          },
-        ],
+        content,
         isError: !result.success,
       };
     } catch (error) {

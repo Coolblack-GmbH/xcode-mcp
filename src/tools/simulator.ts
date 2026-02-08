@@ -1,9 +1,9 @@
 import { ToolResult, ToolHandler, Simulator } from '../types.js';
 import { execSimctl, ExecResult } from '../utils/exec.js';
 import { logger } from '../utils/logger.js';
-import { writeFileSync, unlinkSync, existsSync } from 'fs';
+import { writeFileSync, unlinkSync, existsSync, readFileSync } from 'fs';
 import { tmpdir } from 'os';
-import { join } from 'path';
+import { join, extname } from 'path';
 
 /**
  * Tool definition interface
@@ -776,6 +776,30 @@ const simulatorScreenshot: ToolDefinition = {
 
       logger.info(`${type} captured successfully`);
 
+      // For screenshots, read the file and include as base64 so Claude can see it
+      let imageBase64: string | undefined;
+      let imageMimeType: string | undefined;
+
+      if (type === 'screenshot' && existsSync(outputPath)) {
+        try {
+          const imageBuffer = readFileSync(outputPath);
+          imageBase64 = imageBuffer.toString('base64');
+
+          const ext = extname(outputPath).toLowerCase();
+          if (ext === '.png') {
+            imageMimeType = 'image/png';
+          } else if (ext === '.jpg' || ext === '.jpeg') {
+            imageMimeType = 'image/jpeg';
+          } else {
+            imageMimeType = 'image/png'; // Default for simulator screenshots
+          }
+
+          logger.info(`Screenshot encoded as base64 (${imageBuffer.length} bytes)`);
+        } catch (readError) {
+          logger.warn('Could not read screenshot for base64 encoding:', readError);
+        }
+      }
+
       return {
         success: true,
         data: {
@@ -785,6 +809,8 @@ const simulatorScreenshot: ToolDefinition = {
           duration: type === 'video' ? duration : undefined,
           message: `${type.charAt(0).toUpperCase() + type.slice(1)} saved to ${outputPath}`,
         },
+        _imageBase64: imageBase64,
+        _imageMimeType: imageMimeType,
         executionTime: Date.now() - startTime,
       };
     } catch (error) {
