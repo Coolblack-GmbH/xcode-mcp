@@ -34,10 +34,11 @@ readonly ARROW='→'
 
 # Logging variables
 SCRIPT_NAME="$(basename "$0")"
-TOTAL_STEPS=12
+TOTAL_STEPS=14
 CURRENT_STEP=0
 FAILED_STEPS=()
 WARNINGS=()
+CLAUDE_CODE_INSTALLED=false
 
 # ============================================================================
 # Output Functions
@@ -95,10 +96,11 @@ print_summary() {
 
     if [[ ${#FAILED_STEPS[@]} -eq 0 ]] && [[ ${#WARNINGS[@]} -eq 0 ]]; then
         echo -e "${GREEN}${BOLD}✓ Installation completed successfully!${NC}\n"
-        echo "All components are installed and configured. You can now:"
-        echo "  • Use coolblack-xcode-mcp with Claude Desktop"
-        echo "  • Access Xcode automation tools via MCP"
-        echo "  • Manage iOS/macOS/watchOS/tvOS/visionOS projects\n"
+        echo "Alle Komponenten sind installiert und konfiguriert. Du kannst jetzt:"
+        echo "  • Claude Desktop neu starten und die Xcode-Tools nutzen"
+        echo "  • Xcode-Automatisierung per natuerlicher Sprache steuern"
+        echo "  • iOS/macOS/watchOS/tvOS/visionOS Projekte verwalten"
+        echo ""
         return 0
     elif [[ ${#FAILED_STEPS[@]} -eq 0 ]]; then
         echo -e "${YELLOW}${BOLD}⚠ Installation completed with warnings:${NC}\n"
@@ -420,12 +422,29 @@ install_node() {
 }
 
 install_claude_code() {
-    print_step "Check/Install Claude Code (CLI)"
+    print_step "Check/Install Claude Code (CLI) [Optional]"
 
     if command_exists claude; then
         local claude_version
         claude_version=$(claude --version 2>/dev/null | head -1 || echo "installed")
         print_success "Claude Code already installed (${claude_version})"
+        CLAUDE_CODE_INSTALLED=true
+        return 0
+    fi
+
+    # Claude Code CLI ist optional -- nur noetig wenn man Claude im Terminal nutzen will.
+    # Claude Desktop (GUI) funktioniert auch ohne Claude Code CLI.
+    echo ""
+    echo -e "  ${BOLD}${CYAN}Claude Code (CLI) ist optional.${NC}"
+    echo -e "  ${DIM}Wenn du nur Claude Desktop (GUI) nutzt, kannst du diesen Schritt ueberspringen.${NC}"
+    echo -e "  ${DIM}Claude Code CLI ist ein separates Terminal-Tool fuer Entwickler.${NC}"
+    echo ""
+    echo -ne "  Claude Code CLI installieren? [y/${BOLD}N${NC}] "
+    read -r install_choice < /dev/tty 2>/dev/null || install_choice=""
+
+    if [[ ! "$install_choice" =~ ^[yYjJ]$ ]]; then
+        print_info "Claude Code CLI uebersprungen (nicht benoetigt fuer Claude Desktop)"
+        CLAUDE_CODE_INSTALLED=false
         return 0
     fi
 
@@ -467,14 +486,17 @@ install_claude_code() {
             local installed_version
             installed_version=$(claude --version 2>/dev/null | head -1 || echo "installed")
             print_success "Claude Code installiert (${installed_version})"
+            CLAUDE_CODE_INSTALLED=true
         else
             print_success "Claude Code npm-Paket installiert"
             print_info "Neues Terminal oeffnen, damit 'claude' im PATH ist"
+            CLAUDE_CODE_INSTALLED=true
         fi
         return 0
     else
         print_warning "Claude Code Installation fehlgeschlagen (optional)"
         print_info "Manuell installieren: npm install -g @anthropic-ai/claude-code"
+        CLAUDE_CODE_INSTALLED=false
         return 0  # Non-critical
     fi
 }
@@ -492,10 +514,9 @@ configure_claude_code() {
         return 1
     fi
 
-    if ! command_exists claude; then
-        print_warning "Claude Code not installed -- skipping MCP configuration"
-        print_info "After installing Claude Code, run:"
-        print_info "  claude mcp add coolblack-xcode-mcp -- node ${build_index}"
+    if [[ "$CLAUDE_CODE_INSTALLED" != "true" ]] && ! command_exists claude; then
+        print_info "Claude Code CLI nicht installiert -- ueberspringe Claude Code MCP-Konfiguration"
+        print_info "Claude Desktop wird im naechsten Schritt konfiguriert."
         return 0
     fi
 
@@ -667,6 +688,45 @@ install_coolblack_xcode_mcp() {
     print_success "coolblack-xcode-mcp erfolgreich gebaut in ${project_dir}/build/"
 }
 
+check_claude_desktop() {
+    print_step "Check Claude Desktop App"
+
+    # Claude Desktop ist die empfohlene Methode, um den MCP-Server zu nutzen.
+    if [[ -d "/Applications/Claude.app" ]]; then
+        print_success "Claude Desktop ist installiert"
+        return 0
+    fi
+
+    # Auch unter ~/Applications pruefen
+    if [[ -d "$HOME/Applications/Claude.app" ]]; then
+        print_success "Claude Desktop ist installiert (~/Applications)"
+        return 0
+    fi
+
+    print_warning "Claude Desktop nicht gefunden"
+    echo ""
+    echo -e "  ${BOLD}${YELLOW}╔══════════════════════════════════════════════════════════════╗${NC}"
+    echo -e "  ${BOLD}${YELLOW}║  Claude Desktop wird empfohlen, um den MCP-Server zu nutzen ║${NC}"
+    echo -e "  ${BOLD}${YELLOW}║  Download: https://claude.ai/download                       ║${NC}"
+    echo -e "  ${BOLD}${YELLOW}╚══════════════════════════════════════════════════════════════╝${NC}"
+    echo ""
+    echo -ne "  Claude Desktop Download-Seite jetzt oeffnen? [${BOLD}Y${NC}/n] "
+    read -r open_choice < /dev/tty 2>/dev/null || open_choice=""
+
+    if [[ ! "$open_choice" =~ ^[nN]$ ]]; then
+        open "https://claude.ai/download" 2>/dev/null || true
+        print_info "Download-Seite geoeffnet -- bitte Claude Desktop installieren"
+        print_info "Danach diesen Installer nochmal ausfuehren oder Claude Desktop manuell konfigurieren"
+    else
+        print_info "Du kannst Claude Desktop spaeter herunterladen: https://claude.ai/download"
+    fi
+
+    # Weitermachen -- die Konfigurationsdatei wird trotzdem erstellt,
+    # damit sie bereit ist wenn Claude Desktop installiert wird.
+    print_info "MCP-Konfiguration wird trotzdem erstellt (fuer spaeter)"
+    return 0
+}
+
 configure_claude_desktop() {
     print_step "Configure Claude Desktop"
 
@@ -763,6 +823,121 @@ PYTHON_EOF
     print_info "Configuration file: ${config_file}"
 }
 
+setup_simulators() {
+    print_step "Setup iOS Simulators"
+
+    # Ohne Xcode keine Simulatoren
+    if [[ ! -d "/Applications/Xcode.app" ]]; then
+        print_warning "Xcode.app nicht installiert -- Simulatoren koennen nicht eingerichtet werden"
+        return 0
+    fi
+
+    # Pruefen ob iOS Simulator Runtime installiert ist
+    local runtime_installed=false
+    local ios_runtime=""
+
+    # Suche nach installierten iOS-Runtimes
+    ios_runtime=$(xcrun simctl list runtimes 2>/dev/null | grep -i "iOS" | grep -v "unavailable" | tail -1 || echo "")
+
+    if [[ -n "$ios_runtime" ]]; then
+        print_success "iOS Simulator-Runtime bereits installiert"
+        print_info "${ios_runtime}"
+        runtime_installed=true
+    else
+        print_warning "Keine iOS Simulator-Runtime gefunden"
+        echo ""
+        echo -e "  ${BOLD}${YELLOW}Die iOS Simulator-Runtime (~8 GB) wird benoetigt,${NC}"
+        echo -e "  ${BOLD}${YELLOW}um Apps auf dem Simulator zu testen.${NC}"
+        echo ""
+        echo -ne "  iOS Simulator-Runtime jetzt herunterladen? [${BOLD}Y${NC}/n] "
+        read -r download_choice < /dev/tty 2>/dev/null || download_choice=""
+
+        if [[ "$download_choice" =~ ^[nN]$ ]]; then
+            print_info "Simulator-Runtime Download uebersprungen"
+            print_info "Spaeter herunterladen mit: xcodebuild -downloadPlatform iOS"
+            return 0
+        fi
+
+        echo ""
+        echo -e "  ${BOLD}${CYAN}Download gestartet (~8 GB, kann 10-30 Minuten dauern)...${NC}"
+        echo -e "  ${DIM}Du kannst waehrenddessen weiterarbeiten.${NC}"
+        echo ""
+
+        if run_with_spinner "iOS Simulator-Runtime herunterladen" xcodebuild -downloadPlatform iOS; then
+            print_success "iOS Simulator-Runtime erfolgreich heruntergeladen"
+            runtime_installed=true
+            # Runtime-Identifier neu laden
+            ios_runtime=$(xcrun simctl list runtimes 2>/dev/null | grep -i "iOS" | grep -v "unavailable" | tail -1 || echo "")
+        else
+            print_warning "Download fehlgeschlagen oder abgebrochen"
+            print_info "Spaeter manuell herunterladen: xcodebuild -downloadPlatform iOS"
+            print_info "Oder in Xcode: Settings > Platforms > iOS Simulator"
+            return 0
+        fi
+    fi
+
+    # Pruefen ob bereits Simulatoren existieren
+    local existing_sims
+    existing_sims=$(xcrun simctl list devices available 2>/dev/null | grep -c "iPhone" || echo "0")
+
+    if [[ "$existing_sims" -gt 0 ]]; then
+        print_success "${existing_sims} iPhone-Simulator(en) bereits vorhanden"
+        return 0
+    fi
+
+    # Runtime-Identifier extrahieren (z.B. com.apple.CoreSimulator.SimRuntime.iOS-26-2)
+    if [[ "$runtime_installed" != "true" ]] || [[ -z "$ios_runtime" ]]; then
+        print_warning "Keine Runtime verfuegbar -- Simulatoren koennen nicht erstellt werden"
+        return 0
+    fi
+
+    local runtime_id
+    runtime_id=$(xcrun simctl list runtimes 2>/dev/null | grep -i "iOS" | grep -v "unavailable" | tail -1 | sed 's/.*(\(com\.apple[^)]*\)).*/\1/' || echo "")
+
+    if [[ -z "$runtime_id" ]]; then
+        print_warning "Runtime-Identifier nicht erkannt -- Simulatoren manuell erstellen"
+        return 0
+    fi
+
+    print_info "Runtime: ${runtime_id}"
+
+    # Standard-Simulatoren erstellen
+    echo ""
+    echo -e "  ${BOLD}${CYAN}Erstelle Standard-Simulatoren...${NC}"
+
+    local created=0
+
+    # iPhone 16 Pro (aktuelles Flaggschiff)
+    if xcrun simctl create "iPhone 16 Pro" com.apple.CoreSimulator.SimDeviceType.iPhone-16-Pro "$runtime_id" &> /dev/null; then
+        print_success "iPhone 16 Pro erstellt"
+        ((created++))
+    else
+        print_warning "iPhone 16 Pro konnte nicht erstellt werden"
+    fi
+
+    # iPhone 16 (Standard-Modell)
+    if xcrun simctl create "iPhone 16" com.apple.CoreSimulator.SimDeviceType.iPhone-16 "$runtime_id" &> /dev/null; then
+        print_success "iPhone 16 erstellt"
+        ((created++))
+    else
+        print_warning "iPhone 16 konnte nicht erstellt werden"
+    fi
+
+    # iPad (fuer Universal-Apps)
+    if xcrun simctl create "iPad Air 13-inch (M3)" com.apple.CoreSimulator.SimDeviceType.iPad-Air-13-inch-M3 "$runtime_id" &> /dev/null; then
+        print_success "iPad Air 13-inch (M3) erstellt"
+        ((created++))
+    else
+        print_warning "iPad Air konnte nicht erstellt werden"
+    fi
+
+    if [[ $created -gt 0 ]]; then
+        print_success "${created} Simulator(en) erfolgreich erstellt"
+    else
+        print_warning "Keine Simulatoren erstellt -- spaeter manuell in Xcode einrichten"
+    fi
+}
+
 verify_installation() {
     print_step "Verify Installation"
 
@@ -807,7 +982,14 @@ verify_installation() {
         print_warning "Homebrew not found (optional)"
     fi
 
-    # Check Claude Code
+    # Check Claude Desktop App
+    if [[ -d "/Applications/Claude.app" ]] || [[ -d "$HOME/Applications/Claude.app" ]]; then
+        print_success "Claude Desktop App: installiert"
+    else
+        print_warning "Claude Desktop App: nicht gefunden -- Download: https://claude.ai/download"
+    fi
+
+    # Check Claude Code (optional)
     if command_exists claude; then
         local claude_ver
         claude_ver=$(claude --version 2>/dev/null | head -1 || echo "installed")
@@ -823,7 +1005,7 @@ verify_installation() {
             print_info "  Run: claude mcp add coolblack-xcode-mcp -- node ${project_dir}/build/index.js"
         fi
     else
-        print_warning "Claude Code not installed (install with: npm install -g @anthropic-ai/claude-code)"
+        print_info "Claude Code CLI: nicht installiert (optional, nur fuer Terminal-Nutzung)"
     fi
 
     # Check Claude Desktop config
@@ -842,7 +1024,7 @@ verify_installation() {
 }
 
 print_next_steps() {
-    print_section "Next Steps"
+    print_section "Naechste Schritte"
 
     # Xcode-Warnung ganz oben falls nicht installiert
     if [[ ! -d "/Applications/Xcode.app" ]]; then
@@ -854,25 +1036,32 @@ print_next_steps() {
 
     # Restart-Hinweis -- das Wichtigste zuerst!
     echo -e "  ${BOLD}${YELLOW}╔══════════════════════════════════════════════════════════════╗${NC}"
-    echo -e "  ${BOLD}${YELLOW}║  WICHTIG: Claude Code / Desktop muss einmal neu gestartet   ║${NC}"
-    echo -e "  ${BOLD}${YELLOW}║  werden, damit die MCP-Tools erkannt werden!                ║${NC}"
+    echo -e "  ${BOLD}${YELLOW}║  WICHTIG: Claude Desktop einmal neu starten,                ║${NC}"
+    echo -e "  ${BOLD}${YELLOW}║  damit die MCP-Tools erkannt werden!                        ║${NC}"
     echo -e "  ${BOLD}${YELLOW}║                                                              ║${NC}"
-    echo -e "  ${BOLD}${YELLOW}║  1. Claude Code / Desktop starten                           ║${NC}"
-    echo -e "  ${BOLD}${YELLOW}║  2. Komplett beenden (Quit)                                  ║${NC}"
+    echo -e "  ${BOLD}${YELLOW}║  1. Claude Desktop starten                                  ║${NC}"
+    echo -e "  ${BOLD}${YELLOW}║  2. Komplett beenden (Cmd+Q)                                 ║${NC}"
     echo -e "  ${BOLD}${YELLOW}║  3. Erneut starten -- fertig!                                ║${NC}"
     echo -e "  ${BOLD}${YELLOW}╚══════════════════════════════════════════════════════════════╝${NC}"
     echo ""
 
-    echo -e "1. ${BOLD}Claude Code (Terminal)${NC}"
-    echo -e "   Starte direkt im Terminal mit: ${CYAN}claude${NC}"
-    echo -e "   Der MCP-Server ist automatisch registriert."
-    echo -e "   Teste mit: ${CYAN}claude mcp list${NC}"
-    echo ""
-    echo -e "2. ${BOLD}Claude Desktop (GUI)${NC}"
+    echo -e "1. ${BOLD}Claude Desktop (GUI) -- Empfohlen${NC}"
     echo -e "   Schliesse und starte Claude Desktop neu,"
     echo -e "   damit die MCP-Konfiguration geladen wird."
+    echo -e "   Die Xcode-Tools stehen danach sofort zur Verfuegung."
     echo ""
-    echo -e "3. ${BOLD}Sofort loslegen${NC}"
+
+    if [[ "$CLAUDE_CODE_INSTALLED" == "true" ]] || command_exists claude; then
+        echo -e "2. ${BOLD}Claude Code (Terminal) -- Optional${NC}"
+        echo -e "   Starte direkt im Terminal mit: ${CYAN}claude${NC}"
+        echo -e "   Der MCP-Server ist automatisch registriert."
+        echo -e "   Teste mit: ${CYAN}claude mcp list${NC}"
+        echo ""
+        echo -e "3. ${BOLD}Sofort loslegen${NC}"
+    else
+        echo -e "2. ${BOLD}Sofort loslegen${NC}"
+    fi
+
     echo -e "   Frage Claude nach Xcode-Automatisierung, z.B.:"
     echo -e "   ${DIM}\"Erstelle ein neues iOS-Projekt namens MeineApp\"${NC}"
     echo -e "   ${DIM}\"Baue mein Projekt und zeige mir die Fehler\"${NC}"
@@ -898,7 +1087,9 @@ main() {
     install_cocoapods
     install_coolblack_xcode_mcp || return 1
     configure_claude_code
+    check_claude_desktop
     configure_claude_desktop || return 1
+    setup_simulators
     verify_installation
 
     print_summary && {

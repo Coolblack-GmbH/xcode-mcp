@@ -34,7 +34,7 @@ cd xcode-mcp
 ./scripts/install.sh
 ```
 
-The installer automatically checks and installs all prerequisites (Xcode CLI Tools, Homebrew, Node.js, XcodeGen, CocoaPods, Claude Code) and registers the MCP server.
+The installer automatically checks and installs all prerequisites (Xcode CLI Tools, Homebrew, Node.js, XcodeGen, CocoaPods) and registers the MCP server for Claude Desktop. Claude Code CLI installation is optional and only needed for terminal usage.
 
 > **Note:** The installation may take some time depending on your setup. Xcode platform SDKs and Simulator Runtimes are several gigabytes each and can require 10--30 minutes to download. The installer will show progress where possible.
 >
@@ -42,15 +42,15 @@ The installer automatically checks and installs all prerequisites (Xcode CLI Too
 
 ### Important: After Installation
 
-After the installer finishes, you **must restart Claude Code** for the MCP server to be recognized:
+After the installer finishes, you **must restart Claude Desktop** for the MCP server to be recognized:
 
-1. **Start** Claude Code (or Claude Desktop)
-2. **Quit** Claude Code completely
-3. **Start** Claude Code again
+1. **Start** Claude Desktop
+2. **Quit** Claude Desktop completely (Cmd+Q)
+3. **Start** Claude Desktop again
 
 Without this restart cycle, Claude will not detect the new MCP tools. This is a one-time step -- after the initial restart, the server will be available automatically in every future session.
 
-> **Wichtig:** Nach der Installation muss Claude Code einmal gestartet, komplett beendet und erneut gestartet werden. Erst dann werden die MCP-Tools erkannt. Dies ist nur einmalig noetig.
+> **Wichtig:** Nach der Installation muss Claude Desktop einmal gestartet, komplett beendet (Cmd+Q) und erneut gestartet werden. Erst dann werden die MCP-Tools erkannt. Dies ist nur einmalig noetig.
 
 ### Manual Setup
 
@@ -60,11 +60,13 @@ npm install
 
 # 2. Build TypeScript
 npm run build
+```
 
-# 3. Register with Claude Code
-claude mcp add coolblack-xcode-mcp -- node $(pwd)/build/index.js
+**For Claude Desktop (GUI) -- recommended:**
 
-# Or configure Claude Desktop (~/Library/Application Support/Claude/claude_desktop_config.json):
+Edit `~/Library/Application Support/Claude/claude_desktop_config.json`:
+
+```json
 {
   "mcpServers": {
     "coolblack-xcode-mcp": {
@@ -73,6 +75,14 @@ claude mcp add coolblack-xcode-mcp -- node $(pwd)/build/index.js
     }
   }
 }
+```
+
+Then restart Claude Desktop (Cmd+Q, reopen).
+
+**For Claude Code (CLI) -- optional:**
+
+```bash
+claude mcp add coolblack-xcode-mcp -- node $(pwd)/build/index.js
 ```
 
 ### Xcode 26+ Note
@@ -274,7 +284,7 @@ cd xcode-mcp
 ./scripts/install.sh
 ```
 
-**Wichtig nach der Installation:** Claude Code einmal starten, komplett beenden und erneut starten -- erst dann werden die MCP-Tools erkannt (einmalig).
+**Wichtig nach der Installation:** Claude Desktop einmal starten, komplett beenden (Cmd+Q) und erneut starten -- erst dann werden die MCP-Tools erkannt (einmalig).
 
 **Hinweis zur Dauer:** Die Installation kann je nach Internetverbindung laenger dauern, da Xcode-SDKs und Simulator-Runtimes mehrere Gigabyte gross sind (10--30 Minuten Download).
 
