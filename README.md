@@ -24,9 +24,9 @@ Built by **[Dirk Nesner](mailto:nesner@coolblack.gmbh)** at **[coolblack](https:
 **Works with:** Claude Desktop (recommended), Claude Code, any MCP-compatible client
 **Requirements:** macOS, Xcode 16+, Node.js 18+, [Claude Desktop](https://claude.ai/download)
 
-> No API key or separate subscription required -- just install Claude Desktop and go.
+> Works with the **free** Claude Desktop plan. No API key required. A [Pro subscription](https://claude.com/pricing) ($20/month) is recommended for regular development work.
 >
-> Kein API-Key oder separates Abo noetig -- einfach Claude Desktop installieren und loslegen.
+> Funktioniert mit dem **kostenlosen** Claude Desktop Plan. Kein API-Key noetig. Fuer regelmaessige Entwicklung empfehlen wir ein [Pro-Abo](https://claude.com/pricing) ($20/Monat).
 
 ## Installation
 
@@ -280,7 +280,7 @@ See the [Developer Guide](docs/DEVELOPMENT.md) for detailed instructions on exte
 
 ## Deutsche Zusammenfassung
 
-**@coolblack/xcode-mcp** ist ein vollstaendiger MCP-Server zur Xcode-Automatisierung. Er ermoeglicht die komplette Steuerung von Xcode ueber **Claude Desktop** -- von der Projekterstellung ueber Build, Test und Signierung bis zur App Store-Auslieferung. Kein API-Key, kein separates Abo, kein Terminal noetig.
+**@coolblack/xcode-mcp** ist ein vollstaendiger MCP-Server zur Xcode-Automatisierung. Er ermoeglicht die komplette Steuerung von Xcode ueber **Claude Desktop** -- von der Projekterstellung ueber Build, Test und Signierung bis zur App Store-Auslieferung. Funktioniert bereits mit dem kostenlosen Plan -- fuer regelmaessige Entwicklung empfiehlt sich das [Pro-Abo](https://claude.com/pricing) ($20/Monat). Kein API-Key und kein Terminal noetig.
 
 ### Highlights
 
