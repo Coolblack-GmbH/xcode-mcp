@@ -328,19 +328,48 @@ install_homebrew() {
         return 0
     fi
 
+    # Homebrew might be installed but not in PATH (common on Apple Silicon)
+    if [[ -x "/opt/homebrew/bin/brew" ]]; then
+        print_info "Homebrew found but not in PATH -- activating..."
+        export PATH="/opt/homebrew/bin:$PATH"
+        eval "$(/opt/homebrew/bin/brew shellenv)"
+
+        # Persist to shell profiles
+        for profile in "$HOME/.zprofile" "$HOME/.zshrc"; do
+            if ! grep -qF '/opt/homebrew/bin' "$profile" 2>/dev/null; then
+                echo '' >> "$profile"
+                echo '# Homebrew (added by coolblack-xcode-mcp installer)' >> "$profile"
+                echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> "$profile"
+                print_info "Homebrew PATH in ${profile} eingetragen"
+            fi
+        done
+
+        print_success "Homebrew activated ($(get_homebrew_version))"
+        return 0
+    fi
+
     print_info "Homebrew wird installiert (kann einige Minuten dauern)..."
 
     if run_with_spinner "Homebrew installieren" /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"; then
         print_success "Homebrew installed successfully"
 
-        # For Apple Silicon Macs, add Homebrew to PATH
-        if is_arm64_mac; then
+        # Add Homebrew to PATH for current session and shell profiles
+        if is_arm64_mac && [[ -d "/opt/homebrew/bin" ]]; then
             print_info "Configuring Homebrew for Apple Silicon..."
-            if [[ -d "/opt/homebrew/bin" ]]; then
-                export PATH="/opt/homebrew/bin:$PATH"
-                echo 'export PATH="/opt/homebrew/bin:$PATH"' >> ~/.zprofile 2>/dev/null || true
-                echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> ~/.zprofile 2>/dev/null || true
-            fi
+            export PATH="/opt/homebrew/bin:$PATH"
+            eval "$(/opt/homebrew/bin/brew shellenv)"
+
+            # Persist to both .zprofile and .zshrc
+            for profile in "$HOME/.zprofile" "$HOME/.zshrc"; do
+                if ! grep -qF '/opt/homebrew/bin' "$profile" 2>/dev/null; then
+                    echo '' >> "$profile"
+                    echo '# Homebrew (added by coolblack-xcode-mcp installer)' >> "$profile"
+                    echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> "$profile"
+                    print_info "Homebrew PATH in ${profile} eingetragen"
+                fi
+            done
+        elif is_intel_mac && [[ -d "/usr/local/bin" ]]; then
+            export PATH="/usr/local/bin:$PATH"
         fi
         return 0
     else
@@ -376,6 +405,11 @@ install_node() {
 
     print_info "Node.js wird via Homebrew installiert..."
     if run_with_spinner "Node.js installieren" brew install node; then
+        # Refresh PATH so node/npm are available immediately
+        hash -r 2>/dev/null || true
+        if is_arm64_mac && [[ -x "/opt/homebrew/bin/node" ]]; then
+            eval "$(/opt/homebrew/bin/brew shellenv)"
+        fi
         print_success "Node.js installed successfully ($(node -v))"
         return 0
     else
@@ -448,51 +482,41 @@ install_claude_code() {
 configure_claude_code() {
     print_step "Configure Claude Code MCP"
 
+    # Determine project root
+    local project_dir
+    project_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+    local build_index="${project_dir}/build/index.js"
+
+    if [[ ! -f "$build_index" ]]; then
+        print_error "build/index.js not found -- was the build step successful?"
+        return 1
+    fi
+
     if ! command_exists claude; then
-        print_warning "Claude Code not installed - skipping MCP configuration"
+        print_warning "Claude Code not installed -- skipping MCP configuration"
         print_info "After installing Claude Code, run:"
-        print_info "  claude mcp add coolblack-xcode-mcp -- npx -y @coolblack/xcode-mcp"
+        print_info "  claude mcp add coolblack-xcode-mcp -- node ${build_index}"
         return 0
     fi
 
     print_info "Registering coolblack-xcode-mcp with Claude Code..."
+    print_info "Server path: ${build_index}"
 
-    # Use 'claude mcp add' to register the MCP server with Claude Code
-    if claude mcp add coolblack-xcode-mcp -- npx -y @coolblack/xcode-mcp &> /dev/null 2>&1; then
+    # Register MCP server with local build path
+    if claude mcp add coolblack-xcode-mcp -- node "$build_index" &> /dev/null 2>&1; then
         print_success "coolblack-xcode-mcp registered with Claude Code"
     else
-        # Fallback: manually edit the settings file
-        print_info "Trying manual configuration..."
+        print_warning "claude mcp add fehlgeschlagen -- versuche manuelle Konfiguration..."
 
         local claude_settings_dir="${HOME}/.claude"
         local claude_settings_file="${claude_settings_dir}/settings.json"
-
-        # Create directory if needed
         mkdir -p "$claude_settings_dir" 2>/dev/null || true
 
-        if [[ -f "$claude_settings_file" ]]; then
-            # Update existing settings file
-            if command_exists jq; then
-                local temp_file
-                temp_file=$(mktemp)
+        if command_exists python3; then
+            python3 - "$build_index" << 'PYTHON_CLAUDE_CODE'
+import json, os, sys
 
-                # Ensure mcpServers exists
-                if ! jq -e '.mcpServers' "$claude_settings_file" &> /dev/null; then
-                    jq '.mcpServers = {}' "$claude_settings_file" > "$temp_file" 2>/dev/null
-                    mv "$temp_file" "$claude_settings_file"
-                fi
-
-                jq '.mcpServers["coolblack-xcode-mcp"] = {"command": "npx", "args": ["-y", "@coolblack/xcode-mcp"]}' "$claude_settings_file" > "$temp_file" 2>/dev/null
-                if mv "$temp_file" "$claude_settings_file"; then
-                    print_success "Claude Code settings updated"
-                else
-                    print_warning "Could not update Claude Code settings"
-                fi
-            elif command_exists python3; then
-                python3 << 'PYTHON_CLAUDE_CODE'
-import json
-import os
-
+build_path = sys.argv[1]
 settings_file = os.path.expanduser("~/.claude/settings.json")
 
 try:
@@ -505,8 +529,8 @@ if 'mcpServers' not in settings:
     settings['mcpServers'] = {}
 
 settings['mcpServers']['coolblack-xcode-mcp'] = {
-    'command': 'npx',
-    'args': ['-y', '@coolblack/xcode-mcp']
+    'command': 'node',
+    'args': [build_path]
 }
 
 with open(settings_file, 'w') as f:
@@ -514,29 +538,20 @@ with open(settings_file, 'w') as f:
 
 print('ok')
 PYTHON_CLAUDE_CODE
-                if [[ $? -eq 0 ]]; then
-                    print_success "Claude Code settings updated"
-                else
-                    print_warning "Could not update Claude Code settings"
-                fi
+            if [[ $? -eq 0 ]]; then
+                print_success "Claude Code settings manuell konfiguriert"
+            else
+                print_warning "Manuelle Konfiguration fehlgeschlagen"
+                print_info "Bitte manuell ausfuehren:"
+                print_info "  claude mcp add coolblack-xcode-mcp -- node ${build_index}"
             fi
         else
-            # Create new settings file
-            cat > "$claude_settings_file" << 'SETTINGS_EOF'
-{
-  "mcpServers": {
-    "coolblack-xcode-mcp": {
-      "command": "npx",
-      "args": ["-y", "@coolblack/xcode-mcp"]
-    }
-  }
-}
-SETTINGS_EOF
-            print_success "Claude Code settings created"
+            print_info "Bitte manuell ausfuehren:"
+            print_info "  claude mcp add coolblack-xcode-mcp -- node ${build_index}"
         fi
     fi
 
-    print_info "You can verify with: claude mcp list"
+    print_info "Verify with: claude mcp list"
 }
 
 install_xcodegen() {
@@ -603,39 +618,62 @@ install_cocoapods() {
 }
 
 install_coolblack_xcode_mcp() {
-    print_step "Install coolblack-xcode-mcp Package"
+    print_step "Build coolblack-xcode-mcp"
 
     if ! command_exists npm; then
         print_error "npm is required but not found. Please ensure Node.js is properly installed."
         return 1
     fi
 
-    # Check if we're running from the repository directory
-    if [[ -f "package.json" && -d "build" ]]; then
-        print_info "Installiere aus lokalem Repository..."
-        if run_with_spinner "coolblack-xcode-mcp installieren" npm install -g .; then
-            print_success "coolblack-xcode-mcp installed from local repository"
-            return 0
-        else
-            print_error "Local installation failed"
-            return 1
-        fi
+    # Determine project root (script is in scripts/, so go one level up)
+    local project_dir
+    project_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+
+    if [[ ! -f "${project_dir}/package.json" ]]; then
+        print_error "package.json not found in ${project_dir}"
+        print_info "Make sure you cloned the repository first:"
+        print_info "  git clone https://github.com/Coolblack-GmbH/xcode-mcp.git"
+        return 1
     fi
 
-    # Otherwise try to install from npm registry
-    print_info "Installiere coolblack-xcode-mcp von npm..."
-    if run_with_spinner "coolblack-xcode-mcp installieren" npm install -g coolblack-xcode-mcp; then
-        print_success "coolblack-xcode-mcp installed successfully from npm"
-        return 0
+    # Change to project directory
+    cd "$project_dir" || return 1
+    print_info "Projektverzeichnis: ${project_dir}"
+
+    # Step 1: npm install
+    print_info "Installiere npm-Abhaengigkeiten..."
+    if run_with_spinner "npm install" npm install; then
+        print_success "npm-Abhaengigkeiten installiert"
     else
-        print_warning "Could not install from npm (may not be published yet)"
-        print_info "If installing from the repository, please run: npm install -g ."
-        return 0  # Don't fail - they may be installing from repo
+        print_error "npm install fehlgeschlagen"
+        return 1
     fi
+
+    # Step 2: npm run build
+    print_info "Kompiliere TypeScript..."
+    if run_with_spinner "npm run build" npm run build; then
+        print_success "TypeScript erfolgreich kompiliert"
+    else
+        print_error "npm run build fehlgeschlagen"
+        return 1
+    fi
+
+    # Verify build output exists
+    if [[ ! -f "${project_dir}/build/index.js" ]]; then
+        print_error "build/index.js nicht gefunden nach Build"
+        return 1
+    fi
+
+    print_success "coolblack-xcode-mcp erfolgreich gebaut in ${project_dir}/build/"
 }
 
 configure_claude_desktop() {
     print_step "Configure Claude Desktop"
+
+    # Determine project root
+    local project_dir
+    project_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+    local build_index="${project_dir}/build/index.js"
 
     local config_dir="${HOME}/Library/Application Support/Claude"
     local config_file="${config_dir}/claude_desktop_config.json"
@@ -650,52 +688,31 @@ configure_claude_desktop() {
     fi
 
     print_info "Configuring Claude Desktop..."
+    print_info "Server path: ${build_index}"
 
-    # Check if config file exists
     if [[ ! -f "$config_file" ]]; then
+        # Create new config with local path
         print_info "Creating new Claude Desktop configuration..."
-        cat > "$config_file" << 'EOF'
+        cat > "$config_file" << EOF
 {
   "mcpServers": {
     "coolblack-xcode-mcp": {
-      "command": "npx",
-      "args": ["-y", "@coolblack/xcode-mcp"]
+      "command": "node",
+      "args": ["${build_index}"]
     }
   }
 }
 EOF
         print_success "Created Claude Desktop configuration"
     else
-        # File exists, update it with jq if available, otherwise use Python
+        # Update existing config
         print_info "Updating existing Claude Desktop configuration..."
 
-        if command_exists jq; then
-            # Use jq to add/update the entry
-            local temp_file
-            temp_file=$(mktemp)
+        if command_exists python3; then
+            python3 - "$build_index" << 'PYTHON_EOF'
+import json, os, sys
 
-            # Check if mcpServers exists
-            if ! jq -e '.mcpServers' "$config_file" &> /dev/null; then
-                jq '.mcpServers = {}' "$config_file" > "$temp_file"
-                mv "$temp_file" "$config_file"
-            fi
-
-            # Add/update coolblack-xcode-mcp entry
-            jq '.mcpServers["coolblack-xcode-mcp"] = {"command": "npx", "args": ["-y", "@coolblack/xcode-mcp"]}' "$config_file" > "$temp_file"
-
-            if mv "$temp_file" "$config_file"; then
-                print_success "Updated Claude Desktop configuration"
-            else
-                print_error "Failed to update configuration with jq"
-                return 1
-            fi
-        else
-            # Use Python to update JSON
-            python3 << 'PYTHON_EOF'
-import json
-import sys
-import os
-
+build_path = sys.argv[1]
 config_file = os.path.expanduser("~/Library/Application Support/Claude/claude_desktop_config.json")
 
 try:
@@ -708,20 +725,36 @@ if 'mcpServers' not in config:
     config['mcpServers'] = {}
 
 config['mcpServers']['coolblack-xcode-mcp'] = {
-    'command': 'npx',
-    'args': ['-y', '@coolblack/xcode-mcp']
+    'command': 'node',
+    'args': [build_path]
 }
 
 with open(config_file, 'w') as f:
     json.dump(config, f, indent=2)
 
-print('Configuration updated successfully')
+print('ok')
 PYTHON_EOF
-
             if [[ $? -eq 0 ]]; then
                 print_success "Updated Claude Desktop configuration"
             else
-                print_error "Failed to update configuration with Python"
+                print_error "Failed to update configuration"
+                return 1
+            fi
+        elif command_exists jq; then
+            local temp_file
+            temp_file=$(mktemp)
+
+            if ! jq -e '.mcpServers' "$config_file" &> /dev/null; then
+                jq '.mcpServers = {}' "$config_file" > "$temp_file"
+                mv "$temp_file" "$config_file"
+            fi
+
+            jq --arg path "$build_index" '.mcpServers["coolblack-xcode-mcp"] = {"command": "node", "args": [$path]}' "$config_file" > "$temp_file"
+
+            if mv "$temp_file" "$config_file"; then
+                print_success "Updated Claude Desktop configuration"
+            else
+                print_error "Failed to update configuration with jq"
                 return 1
             fi
         fi
@@ -784,8 +817,10 @@ verify_installation() {
         if claude mcp list 2>/dev/null | grep -q "coolblack-xcode-mcp" &> /dev/null; then
             print_success "Claude Code MCP: coolblack-xcode-mcp registered"
         else
+            local project_dir
+            project_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
             print_warning "Claude Code MCP: coolblack-xcode-mcp may need manual registration"
-            print_info "  Run: claude mcp add coolblack-xcode-mcp -- npx -y @coolblack/xcode-mcp"
+            print_info "  Run: claude mcp add coolblack-xcode-mcp -- node ${project_dir}/build/index.js"
         fi
     else
         print_warning "Claude Code not installed (install with: npm install -g @anthropic-ai/claude-code)"
@@ -817,6 +852,17 @@ print_next_steps() {
         echo ""
     fi
 
+    # Restart-Hinweis -- das Wichtigste zuerst!
+    echo -e "  ${BOLD}${YELLOW}╔══════════════════════════════════════════════════════════════╗${NC}"
+    echo -e "  ${BOLD}${YELLOW}║  WICHTIG: Claude Code / Desktop muss einmal neu gestartet   ║${NC}"
+    echo -e "  ${BOLD}${YELLOW}║  werden, damit die MCP-Tools erkannt werden!                ║${NC}"
+    echo -e "  ${BOLD}${YELLOW}║                                                              ║${NC}"
+    echo -e "  ${BOLD}${YELLOW}║  1. Claude Code / Desktop starten                           ║${NC}"
+    echo -e "  ${BOLD}${YELLOW}║  2. Komplett beenden (Quit)                                  ║${NC}"
+    echo -e "  ${BOLD}${YELLOW}║  3. Erneut starten -- fertig!                                ║${NC}"
+    echo -e "  ${BOLD}${YELLOW}╚══════════════════════════════════════════════════════════════╝${NC}"
+    echo ""
+
     echo -e "1. ${BOLD}Claude Code (Terminal)${NC}"
     echo -e "   Starte direkt im Terminal mit: ${CYAN}claude${NC}"
     echo -e "   Der MCP-Server ist automatisch registriert."
@@ -831,9 +877,6 @@ print_next_steps() {
     echo -e "   ${DIM}\"Erstelle ein neues iOS-Projekt namens MeineApp\"${NC}"
     echo -e "   ${DIM}\"Baue mein Projekt und zeige mir die Fehler\"${NC}"
     echo -e "   ${DIM}\"Liste alle verfuegbaren Simulatoren\"${NC}"
-    echo ""
-    echo -e "4. ${BOLD}Verfuegbare Tools pruefen${NC}"
-    echo -e "   ${CYAN}npx @modelcontextprotocol/inspector @coolblack/xcode-mcp${NC}"
     echo ""
 }
 
