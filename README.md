@@ -105,9 +105,13 @@ The Simulator Runtime (~8 GB) is a separate download from the SDK (compile heade
 
 Once installed, just ask Claude in natural language:
 
+> *"Create a weather app called SkyView with animated gradient backgrounds that change by time of day, a 5-day forecast, and elegant SF Symbols. Build it and launch it on the simulator."*
+
+More things you can ask:
+
 ```
-"Create a new SwiftUI app called WeatherApp"
-"Build my project and run it on the iPhone 16 Pro simulator"
+"Take a screenshot of my app and tell me what I can improve"
+"Find and fix all build errors in my project"
 "Run all unit tests and show me the coverage report"
 "Archive the app and export an IPA for App Store distribution"
 "Set up a GitHub Actions CI/CD pipeline"
@@ -305,7 +309,9 @@ cd xcode-mcp
 
 **Hinweis zur Dauer:** Die Installation kann je nach Internetverbindung laenger dauern, da Xcode-SDKs und Simulator-Runtimes mehrere Gigabyte gross sind (10--30 Minuten Download).
 
-Danach einfach Claude in der Desktop-App fragen: *"Erstelle eine neue SwiftUI-App namens MeineApp und starte sie auf dem Simulator."*
+Danach einfach Claude in der Desktop-App fragen:
+
+> *"Erstelle eine Wetter-App namens SkyView mit animierten Gradient-Hintergruenden je nach Tageszeit, einer 5-Tage-Vorschau und eleganten SF Symbols. Baue sie und starte sie auf dem Simulator."*
 
 ---
 

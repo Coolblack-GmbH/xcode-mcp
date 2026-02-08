@@ -1062,10 +1062,15 @@ print_next_steps() {
         echo -e "2. ${BOLD}Sofort loslegen${NC}"
     fi
 
-    echo -e "   Frage Claude nach Xcode-Automatisierung, z.B.:"
-    echo -e "   ${DIM}\"Erstelle ein neues iOS-Projekt namens MeineApp\"${NC}"
-    echo -e "   ${DIM}\"Baue mein Projekt und zeige mir die Fehler\"${NC}"
-    echo -e "   ${DIM}\"Liste alle verfuegbaren Simulatoren\"${NC}"
+    echo -e "   Frage Claude einfach, z.B.:"
+    echo ""
+    echo -e "   ${CYAN}\"Erstelle eine Wetter-App namens SkyView mit animierten"
+    echo -e "    Gradient-Hintergruenden je nach Tageszeit, einer 5-Tage-Vorschau"
+    echo -e "    und eleganten SF Symbols. Baue sie und starte sie auf dem Simulator.\"${NC}"
+    echo ""
+    echo -e "   ${DIM}Weitere Ideen:${NC}"
+    echo -e "   ${DIM}\"Zeig mir einen Screenshot meiner App und sag mir was ich verbessern kann\"${NC}"
+    echo -e "   ${DIM}\"Finde und behebe alle Build-Fehler in meinem Projekt\"${NC}"
     echo ""
 }
 
