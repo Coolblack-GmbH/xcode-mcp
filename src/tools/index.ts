@@ -14,6 +14,7 @@ import { dependencyTools } from './dependencies.js';
 import { profilingTools } from './profiling.js';
 import { utilityTools } from './utility.js';
 import { cicdTools } from './cicd.js';
+import { filesystemTools } from './filesystem.js';
 
 // Import types
 import { ToolResult, ToolHandler } from '../types.js';
@@ -44,6 +45,7 @@ export function registerTools(server: Server): void {
     ...profilingTools,
     ...utilityTools,
     ...cicdTools,
+    ...filesystemTools,
   ];
 
   logger.info(`Registering ${allTools.length} tools`);

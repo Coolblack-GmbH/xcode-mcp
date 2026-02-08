@@ -109,7 +109,7 @@ Once installed, just ask Claude in natural language:
 "Set up a GitHub Actions CI/CD pipeline"
 ```
 
-## Tools (59 total)
+## Tools (64 total)
 
 ### Setup (6)
 
@@ -225,6 +225,16 @@ Once installed, just ask Claude in natural language:
 | `setup-fastlane` | Initialize Fastlane with build lanes |
 | `validate-ci-config` | Validate CI configuration files |
 
+### Filesystem (5)
+
+| Tool | Description |
+|------|-------------|
+| `write-file` | Write content to a file (create/update Swift source files, configs) |
+| `read-file` | Read file contents from the host filesystem |
+| `list-directory` | List files and directories with sizes and types |
+| `create-directory` | Create directories with automatic parent creation |
+| `delete-file` | Delete files or directories |
+
 ## Resources & Prompts
 
 The server also provides MCP resources for direct data access (`xcode://project/current`, `xcode://sdks`, `xcode://certificates`, `xcode://profiles`, `xcode://simulators`) and workflow prompts for common tasks like creating apps, fixing build errors, preparing App Store submissions, and setting up CI/CD pipelines.
@@ -236,7 +246,7 @@ The server also provides MCP resources for direct data access (`xcode://project/
   src/
     index.ts              # Server entry point (StdioServerTransport)
     types.ts              # Shared TypeScript types
-    tools/                # 11 tool modules (59 tools total)
+    tools/                # 12 tool modules (64 tools total)
     resources/            # MCP resource providers
     prompts/              # Workflow prompt templates
     utils/
