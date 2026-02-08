@@ -5,7 +5,7 @@
 
 <p align="center">
   <a href="#installation">Installation</a> |
-  <a href="#tools-59-total">59 Tools</a> |
+  <a href="#tools-64-total">64 Tools</a> |
   <a href="#deutsche-zusammenfassung">Deutsch</a> |
   <a href="https://coolblack.gmbh">coolblack.gmbh</a>
 </p>
@@ -21,8 +21,12 @@ A full-featured [Model Context Protocol](https://modelcontextprotocol.io) (MCP) 
 Built by **[Dirk Nesner](mailto:nesner@coolblack.gmbh)** at **[coolblack](https://coolblack.gmbh)**.
 
 **Supported platforms:** iOS, macOS, watchOS, tvOS, visionOS
-**Works with:** Claude Code, Claude Desktop, any MCP-compatible client
-**Requirements:** Node.js 18+, Xcode 16+, macOS
+**Works with:** Claude Desktop (recommended), Claude Code, any MCP-compatible client
+**Requirements:** macOS, Xcode 16+, Node.js 18+, [Claude Desktop](https://claude.ai/download)
+
+> No API key or separate subscription required -- just install Claude Desktop and go.
+>
+> Kein API-Key oder separates Abo noetig -- einfach Claude Desktop installieren und loslegen.
 
 ## Installation
 
@@ -163,7 +167,7 @@ Once installed, just ask Claude in natural language:
 | `install-app-simulator` | Install .app bundle on simulator |
 | `launch-app-simulator` | Launch app by bundle ID on simulator |
 | `simulator-push-notification` | Send push notification to simulator app |
-| `simulator-screenshot` | Capture screenshot or record video |
+| `simulator-screenshot` | Capture screenshot or record video (returns image directly to Claude for visual debugging) |
 
 ### Code Signing (7)
 
@@ -276,14 +280,17 @@ See the [Developer Guide](docs/DEVELOPMENT.md) for detailed instructions on exte
 
 ## Deutsche Zusammenfassung
 
-**@coolblack/xcode-mcp** ist ein vollstaendiger MCP-Server zur Xcode-Automatisierung. Er ermoeglicht die komplette Steuerung von Xcode ueber KI-Assistenten wie Claude -- von der Projekterstellung ueber Build, Test und Signierung bis zur App Store-Auslieferung.
+**@coolblack/xcode-mcp** ist ein vollstaendiger MCP-Server zur Xcode-Automatisierung. Er ermoeglicht die komplette Steuerung von Xcode ueber **Claude Desktop** -- von der Projekterstellung ueber Build, Test und Signierung bis zur App Store-Auslieferung. Kein API-Key, kein separates Abo, kein Terminal noetig.
 
 ### Highlights
 
-- **59 Tools** fuer alle Aspekte der Apple-Entwicklung
-- **Automatische Installation** mit einem einzigen Befehl
+- **64 Tools** fuer alle Aspekte der Apple-Entwicklung
+- **Claude Desktop** als empfohlene Methode -- einfach installieren und loslegen
+- **Automatische Installation** mit einem einzigen Befehl (inkl. Simulator-Einrichtung)
 - **Xcode 26+ kompatibel** -- erkennt automatisch fehlende SDKs und Simulator-Runtimes
 - **Simulator-Automation** -- baut, installiert und startet Apps vollautomatisch
+- **Visuelles Debugging** -- Claude kann Simulator-Screenshots sehen und UI-Probleme erkennen
+- **Dateisystem-Zugriff** -- Claude kann Swift-Quelldateien direkt ins Projekt schreiben
 - **CI/CD-Generierung** fuer GitHub Actions, GitLab CI und Fastlane
 
 ### Schnellstart
@@ -298,7 +305,7 @@ cd xcode-mcp
 
 **Hinweis zur Dauer:** Die Installation kann je nach Internetverbindung laenger dauern, da Xcode-SDKs und Simulator-Runtimes mehrere Gigabyte gross sind (10--30 Minuten Download).
 
-Danach einfach Claude fragen: *"Erstelle eine neue SwiftUI-App namens MeineApp und starte sie auf dem Simulator."*
+Danach einfach Claude in der Desktop-App fragen: *"Erstelle eine neue SwiftUI-App namens MeineApp und starte sie auf dem Simulator."*
 
 ---
 
