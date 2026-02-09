@@ -60,6 +60,24 @@ Without this restart cycle, Claude will not detect the new MCP tools. This is a 
 
 > **Wichtig:** Nach der Installation muss Claude Desktop einmal gestartet, komplett beendet (Cmd+Q) und erneut gestartet werden. Erst dann werden die MCP-Tools erkannt. Dies ist nur einmalig noetig.
 
+### Uninstall
+
+To remove all components installed by the installer:
+
+```bash
+./scripts/uninstall.sh
+```
+
+The uninstaller interactively removes the MCP configuration, simulators created by the installer, and build artifacts. Optional components (XcodeGen, CocoaPods, Claude Code CLI) are only removed if you confirm. Use `--yes` to skip all prompts:
+
+```bash
+./scripts/uninstall.sh --yes
+```
+
+> Node.js, Homebrew, Xcode, and the Claude Desktop App are **not** removed, as they may be needed by other tools.
+>
+> Der Uninstaller entfernt interaktiv die MCP-Konfiguration, vom Installer erstellte Simulatoren und Build-Artefakte. Optionale Komponenten (XcodeGen, CocoaPods, Claude Code CLI) werden nur nach Bestaetigung entfernt. Node.js, Homebrew, Xcode und Claude Desktop werden **nicht** entfernt.
+
 ### Manual Setup
 
 ```bash
@@ -268,6 +286,7 @@ The server also provides MCP resources for direct data access (`xcode://project/
       errors.ts           # Build error parsing and fix suggestions
   scripts/
     install.sh            # Automated installer
+    uninstall.sh          # Automated uninstaller
   build/                  # Compiled JavaScript output
 ```
 
