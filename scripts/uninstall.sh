@@ -460,9 +460,7 @@ remove_cocoapods() {
 }
 
 remove_claude_code_cli() {
-    # This is part of the CocoaPods step count-wise, we combine steps 5+6
-    # Actually we handle this as a sub-part of step 5
-    echo "" # visual separator
+    print_step "Claude Code CLI deinstallieren (optional)"
 
     if ! command_exists claude && ! npm list -g @anthropic-ai/claude-code &> /dev/null 2>&1; then
         print_info "Claude Code CLI ist nicht installiert"
