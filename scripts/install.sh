@@ -462,8 +462,13 @@ install_homebrew() {
     fi
 
     print_info "Homebrew wird installiert (kann einige Minuten dauern)..."
+    print_info "Bitte folge den Anweisungen im Terminal (Enter-Taste und Passwort)."
+    echo ""
 
-    if run_with_spinner "Homebrew installieren" /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"; then
+    # WICHTIG: Homebrew-Installer ist interaktiv (ENTER-Bestaetigung + sudo-Passwort).
+    # Daher NICHT ueber run_with_spinner ausfuehren, sondern direkt im Vordergrund,
+    # damit der Nutzer die Prompts sieht und darauf reagieren kann.
+    if /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"; then
         print_success "Homebrew installed successfully"
 
         # Add Homebrew to PATH for current session and shell profiles
