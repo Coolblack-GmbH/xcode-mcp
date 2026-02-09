@@ -12,6 +12,17 @@
 
 ---
 
+## 📺 Video-Tutorial (Deutsch)
+
+Schau dir unser deutsches Video-Tutorial an, um zu sehen, wie du **xcode-mcp** einrichtest und verwendest:
+
+**[▶️ Video-Anleitung ansehen](https://github.com/Coolblack-GmbH/xcode-mcp/raw/main/assets/xcode-mcp-tutorial.mp4)**
+
+*Das Video zeigt Schritt für Schritt die Installation und Verwendung von xcode-mcp mit Claude Desktop.*
+
+
+---
+
 > **Beta Software** -- This project is under active development and provided free of charge without any warranty. Use at your own risk. See [LICENSE](LICENSE) for full terms.
 >
 > **Beta-Software** -- Dieses Projekt befindet sich in aktiver Entwicklung und wird kostenlos ohne jegliche Gewaehrleistung zur Verfuegung gestellt. Nutzung auf eigene Gefahr. Siehe [LICENSE](LICENSE) fuer die vollstaendigen Bedingungen.
