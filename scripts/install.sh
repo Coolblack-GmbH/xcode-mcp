@@ -187,6 +187,48 @@ run_with_spinner() {
     return $exit_code
 }
 
+# Progress-Anzeige fuer grosse Downloads (zeigt Elapsed Time + Groesse)
+# Usage: run_with_progress "message" "~35 GB" command arg1 arg2 ...
+run_with_progress() {
+    local message="$1"
+    local size_info="$2"
+    shift 2
+    local pid
+    local start_time
+    start_time=$(date +%s)
+
+    # Run command in background
+    "$@" &> /tmp/xmm_download_progress.log &
+    pid=$!
+
+    local spin_chars='⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏'
+    local i=0
+
+    while kill -0 "$pid" 2>/dev/null; do
+        local elapsed=$(( $(date +%s) - start_time ))
+        local mins=$((elapsed / 60))
+        local secs=$((elapsed % 60))
+        local char="${spin_chars:$i:1}"
+        printf "\r  ${CYAN}%s${NC} %s ${DIM}[%s] %d:%02d vergangen${NC}    " "$char" "$message" "$size_info" "$mins" "$secs"
+        sleep 0.5
+        i=$(( (i + 1) % ${#spin_chars} ))
+    done
+
+    # Get exit code
+    wait "$pid"
+    local exit_code=$?
+    local total_elapsed=$(( $(date +%s) - start_time ))
+    local total_mins=$((total_elapsed / 60))
+    local total_secs=$((total_elapsed % 60))
+    printf "\r                                                                              \r"
+
+    if [[ $exit_code -eq 0 ]]; then
+        printf "  ${GREEN}${CHECK}${NC} %s ${DIM}(Dauer: %d:%02d)${NC}\n" "$message" "$total_mins" "$total_secs"
+    fi
+
+    return $exit_code
+}
+
 # ============================================================================
 # Step Functions
 # ============================================================================
@@ -283,9 +325,8 @@ check_xcode() {
             print_warning "iOS Plattform SDK nicht gefunden"
             echo ""
             echo -e "  ${BOLD}${YELLOW}In Xcode 26+ muss das iOS SDK separat heruntergeladen werden.${NC}"
-            echo -e "  ${BOLD}${YELLOW}Download wird gestartet (~8 GB)...${NC}"
             echo ""
-            if run_with_spinner "iOS Plattform herunterladen" xcodebuild -downloadPlatform iOS; then
+            if run_with_progress "iOS Plattform herunterladen" "~8 GB" xcodebuild -downloadPlatform iOS; then
                 print_success "iOS Plattform erfolgreich installiert"
             else
                 print_warning "iOS Plattform-Download fehlgeschlagen"
@@ -298,25 +339,92 @@ check_xcode() {
         echo ""
         echo -e "  ${BOLD}${YELLOW}╔══════════════════════════════════════════════════════════════╗${NC}"
         echo -e "  ${BOLD}${YELLOW}║  Xcode wird fuer die volle Funktionalitaet benoetigt!      ║${NC}"
-        echo -e "  ${BOLD}${YELLOW}║                                                              ║${NC}"
-        echo -e "  ${BOLD}${YELLOW}║  Der App Store wird jetzt geoeffnet.                        ║${NC}"
-        echo -e "  ${BOLD}${YELLOW}║  Bitte starte die Xcode-Installation parallel.              ║${NC}"
-        echo -e "  ${BOLD}${YELLOW}║  Der Installer hier laeuft normal weiter.                   ║${NC}"
-        echo -e "  ${BOLD}${YELLOW}║                                                              ║${NC}"
-        echo -e "  ${BOLD}${YELLOW}║  Nach der Xcode-Installation einfach nochmal ausfuehren:    ║${NC}"
-        echo -e "  ${BOLD}${YELLOW}║  ${CYAN}./scripts/install.sh${YELLOW}                                        ║${NC}"
+        echo -e "  ${BOLD}${YELLOW}║  Download: ~35 GB                                           ║${NC}"
         echo -e "  ${BOLD}${YELLOW}╚══════════════════════════════════════════════════════════════╝${NC}"
         echo ""
 
-        # App Store direkt zur Xcode-Seite oeffnen
-        print_info "Oeffne App Store -> Xcode..."
-        open "macappstore://itunes.apple.com/app/id497799835" 2>/dev/null || \
-        open "https://apps.apple.com/app/xcode/id497799835" 2>/dev/null || true
+        # Versuche Xcode ueber mas (Mac App Store CLI) zu installieren
+        local xcode_installed_via_mas=false
 
-        print_info "Xcode-Download: ~35 GB – installiere im Hintergrund"
-        print_info "Danach einfach diesen Installer nochmal starten!"
-        echo ""
-        sleep 3  # Kurz warten, damit Nutzer die Meldung liest
+        if command_exists brew; then
+            # mas installieren falls noch nicht vorhanden
+            if ! command_exists mas; then
+                print_info "Installiere mas (Mac App Store CLI)..."
+                brew install mas &>/dev/null 2>&1 || true
+                # PATH aktualisieren fuer Apple Silicon
+                if is_arm64_mac && [[ -x "/opt/homebrew/bin/mas" ]]; then
+                    export PATH="/opt/homebrew/bin:$PATH"
+                fi
+            fi
+
+            if command_exists mas; then
+                # Pruefen ob im App Store angemeldet
+                # mas account gibt bei neueren macOS-Versionen manchmal Fehler,
+                # daher versuchen wir einfach die Installation direkt
+                echo ""
+                echo -e "  ${BOLD}${CYAN}Xcode wird direkt aus dem App Store installiert...${NC}"
+                echo -e "  ${DIM}Das kann 20-60 Minuten dauern (abhaengig von der Internetverbindung).${NC}"
+                echo -e "  ${DIM}Du kannst waehrenddessen am Mac weiterarbeiten.${NC}"
+                echo ""
+
+                if run_with_progress "Xcode herunterladen und installieren" "~35 GB" mas install 497799835; then
+                    xcode_installed_via_mas=true
+                    print_success "Xcode erfolgreich installiert!"
+
+                    # xcode-select auf die neue Installation umstellen
+                    if [[ -d "/Applications/Xcode.app" ]]; then
+                        sudo xcode-select -s /Applications/Xcode.app/Contents/Developer 2>/dev/null || true
+                        # Lizenz akzeptieren
+                        print_info "Akzeptiere Xcode-Lizenz..."
+                        sudo xcodebuild -license accept &>/dev/null || true
+                        print_success "Xcode-Lizenz akzeptiert"
+
+                        # iOS SDK pruefen (Xcode 26+)
+                        print_info "Pruefe iOS-Plattform SDK..."
+                        if xcrun --sdk iphoneos --show-sdk-path &> /dev/null; then
+                            print_success "iOS SDK ist installiert"
+                        else
+                            print_warning "iOS Plattform SDK nicht gefunden"
+                            echo -e "  ${BOLD}${YELLOW}In Xcode 26+ muss das iOS SDK separat heruntergeladen werden.${NC}"
+                            if run_with_progress "iOS Plattform herunterladen" "~8 GB" xcodebuild -downloadPlatform iOS; then
+                                print_success "iOS Plattform erfolgreich installiert"
+                            else
+                                print_warning "iOS Plattform-Download fehlgeschlagen"
+                                echo -e "  ${DIM}Bitte manuell ausfuehren: xcodebuild -downloadPlatform iOS${NC}"
+                                WARNINGS+=("iOS Plattform nicht installiert")
+                            fi
+                        fi
+                    fi
+                else
+                    print_warning "mas install fehlgeschlagen -- Fallback auf App Store"
+                    print_info "Moegliche Ursache: Nicht im App Store angemeldet"
+                fi
+            fi
+        fi
+
+        # Fallback: App Store manuell oeffnen (nur wenn mas nicht funktioniert hat)
+        if [[ "$xcode_installed_via_mas" != "true" ]]; then
+            echo ""
+            echo -e "  ${BOLD}${YELLOW}╔══════════════════════════════════════════════════════════════╗${NC}"
+            echo -e "  ${BOLD}${YELLOW}║  Der App Store wird jetzt geoeffnet.                        ║${NC}"
+            echo -e "  ${BOLD}${YELLOW}║  Bitte starte die Xcode-Installation dort manuell.          ║${NC}"
+            echo -e "  ${BOLD}${YELLOW}║  Der Installer hier laeuft normal weiter.                   ║${NC}"
+            echo -e "  ${BOLD}${YELLOW}║                                                              ║${NC}"
+            echo -e "  ${BOLD}${YELLOW}║  Nach der Xcode-Installation einfach nochmal ausfuehren:    ║${NC}"
+            echo -e "  ${BOLD}${YELLOW}║  ${CYAN}./scripts/install.sh${YELLOW}                                        ║${NC}"
+            echo -e "  ${BOLD}${YELLOW}╚══════════════════════════════════════════════════════════════╝${NC}"
+            echo ""
+
+            # App Store direkt zur Xcode-Seite oeffnen
+            print_info "Oeffne App Store -> Xcode..."
+            open "macappstore://itunes.apple.com/app/id497799835" 2>/dev/null || \
+            open "https://apps.apple.com/app/xcode/id497799835" 2>/dev/null || true
+
+            print_info "Xcode-Download: ~35 GB – installiere im Hintergrund"
+            print_info "Danach einfach diesen Installer nochmal starten!"
+            echo ""
+            sleep 3  # Kurz warten, damit Nutzer die Meldung liest
+        fi
     fi
 }
 
@@ -689,7 +797,7 @@ install_coolblack_xcode_mcp() {
 }
 
 check_claude_desktop() {
-    print_step "Check Claude Desktop App"
+    print_step "Check/Install Claude Desktop App"
 
     # Claude Desktop ist die empfohlene Methode, um den MCP-Server zu nutzen.
     if [[ -d "/Applications/Claude.app" ]]; then
@@ -706,19 +814,44 @@ check_claude_desktop() {
     print_warning "Claude Desktop nicht gefunden"
     echo ""
     echo -e "  ${BOLD}${YELLOW}╔══════════════════════════════════════════════════════════════╗${NC}"
-    echo -e "  ${BOLD}${YELLOW}║  Claude Desktop wird empfohlen, um den MCP-Server zu nutzen ║${NC}"
-    echo -e "  ${BOLD}${YELLOW}║  Download: https://claude.ai/download                       ║${NC}"
+    echo -e "  ${BOLD}${YELLOW}║  Claude Desktop wird fuer den MCP-Server benoetigt.         ║${NC}"
     echo -e "  ${BOLD}${YELLOW}╚══════════════════════════════════════════════════════════════╝${NC}"
     echo ""
-    echo -ne "  Claude Desktop Download-Seite jetzt oeffnen? [${BOLD}Y${NC}/n] "
-    read -r open_choice < /dev/tty 2>/dev/null || open_choice=""
 
-    if [[ ! "$open_choice" =~ ^[nN]$ ]]; then
-        open "https://claude.ai/download" 2>/dev/null || true
-        print_info "Download-Seite geoeffnet -- bitte Claude Desktop installieren"
-        print_info "Danach diesen Installer nochmal ausfuehren oder Claude Desktop manuell konfigurieren"
-    else
-        print_info "Du kannst Claude Desktop spaeter herunterladen: https://claude.ai/download"
+    # Versuche Claude Desktop ueber Homebrew Cask zu installieren
+    local claude_installed_via_brew=false
+
+    if command_exists brew; then
+        echo -e "  ${BOLD}${CYAN}Claude Desktop wird via Homebrew installiert...${NC}"
+        echo ""
+
+        if run_with_progress "Claude Desktop installieren" "~250 MB" brew install --cask claude; then
+            claude_installed_via_brew=true
+
+            # Pruefen ob Installation erfolgreich war
+            if [[ -d "/Applications/Claude.app" ]] || [[ -d "$HOME/Applications/Claude.app" ]]; then
+                print_success "Claude Desktop erfolgreich installiert!"
+            else
+                print_warning "brew install abgeschlossen, aber Claude.app nicht gefunden"
+                claude_installed_via_brew=false
+            fi
+        else
+            print_warning "Homebrew-Installation fehlgeschlagen -- Fallback auf manuellen Download"
+        fi
+    fi
+
+    # Fallback: Download-Seite oeffnen (nur wenn brew nicht funktioniert hat)
+    if [[ "$claude_installed_via_brew" != "true" ]]; then
+        echo ""
+        echo -ne "  Claude Desktop Download-Seite jetzt oeffnen? [${BOLD}Y${NC}/n] "
+        read -r open_choice < /dev/tty 2>/dev/null || open_choice=""
+
+        if [[ ! "$open_choice" =~ ^[nN]$ ]]; then
+            open "https://claude.ai/download" 2>/dev/null || true
+            print_info "Download-Seite geoeffnet -- bitte Claude Desktop installieren"
+        else
+            print_info "Du kannst Claude Desktop spaeter herunterladen: https://claude.ai/download"
+        fi
     fi
 
     # Weitermachen -- die Konfigurationsdatei wird trotzdem erstellt,
@@ -859,11 +992,10 @@ setup_simulators() {
         fi
 
         echo ""
-        echo -e "  ${BOLD}${CYAN}Download gestartet (~8 GB, kann 10-30 Minuten dauern)...${NC}"
         echo -e "  ${DIM}Du kannst waehrenddessen weiterarbeiten.${NC}"
         echo ""
 
-        if run_with_spinner "iOS Simulator-Runtime herunterladen" xcodebuild -downloadPlatform iOS; then
+        if run_with_progress "iOS Simulator-Runtime herunterladen" "~8 GB" xcodebuild -downloadPlatform iOS; then
             print_success "iOS Simulator-Runtime erfolgreich heruntergeladen"
             runtime_installed=true
             # Runtime-Identifier neu laden
@@ -1084,9 +1216,9 @@ main() {
     # Run all installation steps
     check_macos || return 1
     install_xcode_cli || return 1
-    check_xcode
     install_homebrew || return 1
     install_node || return 1
+    check_xcode
     install_claude_code
     install_xcodegen
     install_cocoapods

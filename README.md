@@ -12,17 +12,6 @@
 
 ---
 
-## 📺 Video-Tutorial (Deutsch)
-
-Schau dir unser deutsches Video-Tutorial an, um zu sehen, wie du **xcode-mcp** einrichtest und verwendest:
-
-**[▶️ Video-Anleitung ansehen](https://github.com/Coolblack-GmbH/xcode-mcp/raw/main/assets/xcode-mcp-tutorial.mp4)**
-
-*Das Video zeigt Schritt für Schritt die Installation und Verwendung von xcode-mcp mit Claude Desktop.*
-
-
----
-
 > **Beta Software** -- This project is under active development and provided free of charge without any warranty. Use at your own risk. See [LICENSE](LICENSE) for full terms.
 >
 > **Beta-Software** -- Dieses Projekt befindet sich in aktiver Entwicklung und wird kostenlos ohne jegliche Gewaehrleistung zur Verfuegung gestellt. Nutzung auf eigene Gefahr. Siehe [LICENSE](LICENSE) fuer die vollstaendigen Bedingungen.
@@ -49,11 +38,11 @@ cd xcode-mcp
 ./scripts/install.sh
 ```
 
-The installer automatically checks and installs all prerequisites (Xcode CLI Tools, Homebrew, Node.js, XcodeGen, CocoaPods) and registers the MCP server for Claude Desktop. Claude Code CLI installation is optional and only needed for terminal usage.
+The installer automatically checks and installs all prerequisites (Xcode CLI Tools, Homebrew, Node.js, Xcode, XcodeGen, CocoaPods, Claude Desktop) and registers the MCP server. Xcode is downloaded via [`mas`](https://github.com/mas-cli/mas) and Claude Desktop via Homebrew Cask -- no manual App Store or browser interaction needed. Claude Code CLI installation is optional and only needed for terminal usage.
 
-> **Note:** The installation may take some time depending on your setup. Xcode platform SDKs and Simulator Runtimes are several gigabytes each and can require 10--30 minutes to download. The installer will show progress where possible.
+> **Note:** The installation may take some time depending on your setup. Xcode (~35 GB), platform SDKs, and Simulator Runtimes are several gigabytes each. The installer shows elapsed time and download size for all large downloads. If the automatic Xcode download via `mas` fails (e.g. not signed into the App Store), the installer falls back to opening the App Store manually.
 >
-> **Hinweis:** Die Installation kann je nach Setup etwas dauern. Xcode-SDKs und Simulator-Runtimes sind mehrere Gigabyte gross und koennen 10--30 Minuten fuer den Download benoetigen.
+> **Hinweis:** Die Installation kann je nach Setup etwas dauern. Xcode (~35 GB), SDKs und Simulator-Runtimes sind mehrere Gigabyte gross. Der Installer zeigt bei allen grossen Downloads die vergangene Zeit und Groesse an. Falls der automatische Xcode-Download ueber `mas` fehlschlaegt (z.B. nicht im App Store angemeldet), wird der App Store als Fallback geoeffnet.
 
 ### Important: After Installation
 
@@ -301,7 +290,7 @@ See the [Developer Guide](docs/DEVELOPMENT.md) for detailed instructions on exte
 
 - **64 Tools** fuer alle Aspekte der Apple-Entwicklung
 - **Claude Desktop** als empfohlene Methode -- einfach installieren und loslegen
-- **Automatische Installation** mit einem einzigen Befehl (inkl. Simulator-Einrichtung)
+- **Automatische Installation** mit einem einzigen Befehl (inkl. Xcode, Claude Desktop und Simulator-Einrichtung)
 - **Xcode 26+ kompatibel** -- erkennt automatisch fehlende SDKs und Simulator-Runtimes
 - **Simulator-Automation** -- baut, installiert und startet Apps vollautomatisch
 - **Visuelles Debugging** -- Claude kann Simulator-Screenshots sehen und UI-Probleme erkennen
@@ -318,7 +307,7 @@ cd xcode-mcp
 
 **Wichtig nach der Installation:** Claude Desktop einmal starten, komplett beenden (Cmd+Q) und erneut starten -- erst dann werden die MCP-Tools erkannt (einmalig).
 
-**Hinweis zur Dauer:** Die Installation kann je nach Internetverbindung laenger dauern, da Xcode-SDKs und Simulator-Runtimes mehrere Gigabyte gross sind (10--30 Minuten Download).
+**Hinweis zur Dauer:** Die Installation kann je nach Internetverbindung laenger dauern, da Xcode (~35 GB), SDKs und Simulator-Runtimes mehrere Gigabyte gross sind. Der Installer zeigt bei allen grossen Downloads die vergangene Zeit an. Xcode wird automatisch ueber `mas` (Mac App Store CLI) heruntergeladen -- kein manueller App Store noetig.
 
 Danach einfach Claude in der Desktop-App fragen:
 
