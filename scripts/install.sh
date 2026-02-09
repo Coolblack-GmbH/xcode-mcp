@@ -362,12 +362,13 @@ check_xcode() {
                 # mas account gibt bei neueren macOS-Versionen manchmal Fehler,
                 # daher versuchen wir einfach die Installation direkt
                 echo ""
-                echo -e "  ${BOLD}${CYAN}Xcode wird direkt aus dem App Store installiert...${NC}"
+                echo -e "  ${BOLD}${CYAN}Xcode wird direkt aus dem App Store installiert (~35 GB)...${NC}"
                 echo -e "  ${DIM}Das kann 20-60 Minuten dauern (abhaengig von der Internetverbindung).${NC}"
-                echo -e "  ${DIM}Du kannst waehrenddessen am Mac weiterarbeiten.${NC}"
+                echo -e "  ${DIM}Falls ein Passwort abgefragt wird, bitte eingeben.${NC}"
                 echo ""
 
-                if run_with_progress "Xcode herunterladen und installieren" "~35 GB" mas install 497799835; then
+                # mas install laeuft im Vordergrund (braucht ggf. Passwort-Eingabe)
+                if mas install 497799835; then
                     xcode_installed_via_mas=true
                     print_success "Xcode erfolgreich installiert!"
 

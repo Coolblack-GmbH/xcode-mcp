@@ -33,10 +33,14 @@ Built by **[Dirk Nesner](mailto:nesner@coolblack.gmbh)** at **[coolblack](https:
 ### One-Line Install (recommended)
 
 ```bash
-git clone https://github.com/Coolblack-GmbH/xcode-mcp.git
-cd xcode-mcp
+curl -L https://github.com/Coolblack-GmbH/xcode-mcp/archive/main.tar.gz | tar xz
+cd xcode-mcp-main
 ./scripts/install.sh
 ```
+
+> Works on a fresh Mac -- no Xcode or git required. `curl` and `tar` are pre-installed on every macOS. A macOS dialog will appear asking to install Command Line Tools -- click **"Install"** to continue.
+>
+> Funktioniert auf einem frischen Mac -- kein Xcode oder git noetig. `curl` und `tar` sind auf jedem macOS vorinstalliert. Es erscheint ein macOS-Dialog zur Installation der Command Line Tools -- einfach auf **"Installieren"** klicken.
 
 The installer automatically checks and installs all prerequisites (Xcode CLI Tools, Homebrew, Node.js, Xcode, XcodeGen, CocoaPods, Claude Desktop) and registers the MCP server. Xcode is downloaded via [`mas`](https://github.com/mas-cli/mas) and Claude Desktop via Homebrew Cask -- no manual App Store or browser interaction needed. Claude Code CLI installation is optional and only needed for terminal usage.
 
@@ -300,8 +304,8 @@ See the [Developer Guide](docs/DEVELOPMENT.md) for detailed instructions on exte
 ### Schnellstart
 
 ```bash
-git clone https://github.com/Coolblack-GmbH/xcode-mcp.git
-cd xcode-mcp
+curl -L https://github.com/Coolblack-GmbH/xcode-mcp/archive/main.tar.gz | tar xz
+cd xcode-mcp-main
 ./scripts/install.sh
 ```
 
