@@ -333,6 +333,16 @@ cd xcode-mcp-main
 
 **Hinweis zur Dauer:** Die Installation kann je nach Internetverbindung laenger dauern, da Xcode (~35 GB), SDKs und Simulator-Runtimes mehrere Gigabyte gross sind. Der Installer zeigt bei allen grossen Downloads die vergangene Zeit an. Xcode wird automatisch ueber `mas` (Mac App Store CLI) heruntergeladen -- kein manueller App Store noetig.
 
+### Deinstallation
+
+```bash
+./scripts/uninstall.sh
+```
+
+Entfernt interaktiv alle vom Installer eingerichteten Komponenten: MCP-Konfiguration (Claude Desktop und Claude Code), vom Installer erstellte Simulatoren und Build-Artefakte. Optionale Komponenten (XcodeGen, CocoaPods, Claude Code CLI) werden nur nach Rueckfrage entfernt. Mit `--yes` werden alle Nachfragen uebersprungen.
+
+**Nicht entfernt** (koennten anderweitig benoetigt werden): Node.js, Homebrew, Xcode, Claude Desktop App. Bereits erstellte Xcode-Projekte und Apps bleiben ebenfalls unangetastet.
+
 Danach einfach Claude in der Desktop-App fragen:
 
 > *"Erstelle eine Wetter-App namens SkyView mit animierten Gradient-Hintergruenden je nach Tageszeit, einer 5-Tage-Vorschau und eleganten SF Symbols. Baue sie und starte sie auf dem Simulator."*
