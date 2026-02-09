@@ -17,7 +17,8 @@
     "build/",
     "scripts/install.sh",
     "README.md",
-    "LICENSE"
+    "LICENSE",
+    "DISCLAIMER.md"
   ],
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.12.0",

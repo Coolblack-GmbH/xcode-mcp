@@ -79,4 +79,4 @@ Die kostenlose Bereitstellung dieser Software begruendet kein Vertragsverhaeltni
 
 ---
 
-Copyright (c) 2025 Dirk Nesner / coolblack GmbH
+Copyright (c) 2025-2026 Dirk Nesner / coolblack GmbH

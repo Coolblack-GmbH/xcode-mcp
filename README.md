@@ -265,12 +265,13 @@ The server also provides MCP resources for direct data access (`xcode://project/
       exec.ts             # Subprocess execution, platform/runtime checks
       logger.ts           # Logging
       paths.ts            # Path helpers
+      errors.ts           # Build error parsing and fix suggestions
   scripts/
     install.sh            # Automated installer
   build/                  # Compiled JavaScript output
 ```
 
-**Tech stack:** TypeScript (ESM), `@modelcontextprotocol/sdk` v1.12.0, XcodeGen, `xcrun simctl`
+**Tech stack:** TypeScript (ESM), `@modelcontextprotocol/sdk` v1.12.0+, XcodeGen, `xcrun simctl`
 
 ## Development
 

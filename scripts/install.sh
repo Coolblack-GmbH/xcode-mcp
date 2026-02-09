@@ -6,8 +6,10 @@
 # A comprehensive, user-friendly installer for the coolblack-xcode-mcp MCP server.
 # Installs all prerequisites and configures the MCP server for Claude Desktop.
 #
-# Usage: curl -fsSL https://raw.githubusercontent.com/.../install.sh | bash
-# Or:    ./scripts/install.sh
+# Usage:
+#   curl -L https://github.com/Coolblack-GmbH/xcode-mcp/archive/main.tar.gz | tar xz
+#   cd xcode-mcp-main
+#   ./scripts/install.sh
 ################################################################################
 
 set -euo pipefail
@@ -49,11 +51,11 @@ print_header() {
     echo -e "${BOLD}${CYAN}"
     cat << "EOF"
 ╔════════════════════════════════════════════════════════════════════════════╗
-║                                                                            ║
-║         🔨  coolblack-xcode-mcp Installer                                   ║
-║                                                                            ║
-║         Complete Xcode Automation MCP Server for Apple Platforms         ║
-║                                                                            ║
+║                                                                          ║
+║        coolblack-xcode-mcp Installer                                     ║
+║                                                                          ║
+║        Complete Xcode Automation MCP Server for Apple Platforms           ║
+║                                                                          ║
 ╚════════════════════════════════════════════════════════════════════════════╝
 EOF
     echo -e "${NC}\n"
