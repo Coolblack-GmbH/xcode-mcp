@@ -21,7 +21,7 @@ A full-featured [Model Context Protocol](https://modelcontextprotocol.io) (MCP) 
 Built by **[Dirk Nesner](mailto:nesner@coolblack.gmbh)** at **[coolblack](https://coolblack.gmbh)**.
 
 **Supported platforms:** iOS, macOS, watchOS, tvOS, visionOS
-**Works with:** Claude Desktop (recommended), Claude Code, any MCP-compatible client
+**Works with:** Claude Desktop (easy start), Claude Code (best for power users), any MCP-compatible client
 **Requirements:** macOS, Xcode 16+, Node.js 18+, [Claude Desktop](https://claude.ai/download)
 
 > Works with the **free** Claude Desktop plan. No API key required. A [Pro subscription](https://claude.com/pricing) ($20/month) is recommended for regular development work.
@@ -105,11 +105,15 @@ Edit `~/Library/Application Support/Claude/claude_desktop_config.json`:
 
 Then restart Claude Desktop (Cmd+Q, reopen).
 
-**For Claude Code (CLI) -- optional:**
+**For Claude Code (CLI) -- optional, recommended for experienced developers:**
 
 ```bash
 claude mcp add coolblack-xcode-mcp -- node $(pwd)/build/index.js
 ```
+
+> **Why Claude Code?** Claude Code runs directly in the terminal and offers several advantages for MCP tools: direct shell access for long-running builds, better chaining of multiple tool calls, full visibility into command output, and more control over the development workflow. If you're comfortable with the command line, Claude Code often delivers better results with build, test, and deployment tools. Claude Desktop remains the easiest way to get started.
+>
+> **Warum Claude Code?** Claude Code laeuft direkt im Terminal und bietet fuer MCP-Tools einige Vorteile: direkter Shell-Zugang fuer lange Build-Prozesse, bessere Verkettung mehrerer Tool-Aufrufe, volle Sichtbarkeit der Kommando-Ausgaben und mehr Kontrolle ueber den Entwicklungs-Workflow. Wer mit dem Terminal vertraut ist, erzielt mit Build-, Test- und Deployment-Tools oft bessere Ergebnisse. Claude Desktop bleibt der einfachste Einstieg.
 
 ### Xcode 26+ Note
 
