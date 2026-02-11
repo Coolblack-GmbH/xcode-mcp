@@ -1,6 +1,6 @@
 {
   "name": "@coolblack/xcode-mcp",
-  "version": "1.1.0",
+  "version": "2.0.0",
   "description": "Complete Xcode automation MCP server for iOS, macOS, watchOS, tvOS, and visionOS development. Build, test, sign, and deploy Apple apps with AI.",
   "type": "module",
   "main": "build/index.js",

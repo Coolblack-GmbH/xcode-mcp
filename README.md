@@ -5,7 +5,7 @@
 
 <p align="center">
   <a href="#installation">Installation</a> |
-  <a href="#tools-64-total">64 Tools</a> |
+  <a href="#tools-100-total">100 Tools</a> |
   <a href="#deutsche-zusammenfassung">Deutsch</a> |
   <a href="https://coolblack.gmbh">coolblack.gmbh</a>
 </p>
@@ -139,7 +139,7 @@ More things you can ask:
 "Set up a GitHub Actions CI/CD pipeline"
 ```
 
-## Tools (64 total)
+## Tools (100 total)
 
 ### Setup (6)
 
@@ -152,7 +152,7 @@ More things you can ask:
 | `download-platform` | Download platform SDK (iOS, watchOS, tvOS, visionOS) |
 | `check-download-status` | Check SDK and simulator runtime download/installation status |
 
-### Project Management (5)
+### Project Management (7)
 
 | Tool | Description |
 |------|-------------|
@@ -161,6 +161,8 @@ More things you can ask:
 | `list-schemes` | List available build schemes |
 | `modify-project` | Modify build settings for a target |
 | `generate-from-yaml` | Generate Xcode project from XcodeGen YAML spec |
+| `add-target` | Add targets (Widget Extension, Watch App, App Clip, etc.) via XcodeGen |
+| `manage-scheme` | Create, delete, or list shared .xcscheme files |
 
 ### Build (6)
 
@@ -265,6 +267,130 @@ More things you can ask:
 | `create-directory` | Create directories with automatic parent creation |
 | `delete-file` | Delete files or directories |
 
+### Physical Devices (3)
+
+| Tool | Description |
+|------|-------------|
+| `list-connected-devices` | List connected physical devices via devicectl (Xcode 15+) |
+| `deploy-to-device` | Build, install, and launch app on a physical device |
+| `read-device-logs` | Read device logs, optionally filtered by bundle ID |
+
+### Version Management (2)
+
+| Tool | Description |
+|------|-------------|
+| `get-version-info` | Read marketing version and build number via agvtool |
+| `bump-version` | Bump major/minor/patch version or build number |
+
+### Plist & Entitlements (2)
+
+| Tool | Description |
+|------|-------------|
+| `modify-plist` | Read, set, add, or delete values in any .plist file via PlistBuddy |
+| `manage-entitlements` | Manage capabilities (Push, iCloud, App Groups, etc.) in .entitlements files |
+
+### Crash Analysis (2)
+
+| Tool | Description |
+|------|-------------|
+| `symbolicate-crash-log` | Symbolicate crash logs using atos and dSYM lookup via Spotlight |
+| `read-crash-reports` | Scan ~/Library/Logs/DiagnosticReports/ for .crash/.ips files |
+
+### Code Quality (2)
+
+| Tool | Description |
+|------|-------------|
+| `run-swiftlint` | Run SwiftLint with JSON output, autocorrect support |
+| `run-swiftformat` | Run SwiftFormat in lint or dry-run mode |
+
+### Localization (3)
+
+| Tool | Description |
+|------|-------------|
+| `export-localizations` | Export localizations via xcodebuild -exportLocalizations |
+| `import-localizations` | Import .xliff translations via xcodebuild -importLocalizations |
+| `list-localization-status` | Parse .xcstrings/.strings files and show translation coverage per locale |
+
+### Privacy Manifests (1)
+
+| Tool | Description |
+|------|-------------|
+| `manage-privacy-manifest` | Create, read, and edit PrivacyInfo.xcprivacy (API declarations, tracking domains) |
+
+### Asset Catalogs (2)
+
+| Tool | Description |
+|------|-------------|
+| `manage-asset-catalog` | List, add, and remove image sets in .xcassets catalogs |
+| `add-app-icon` | Generate app icon set from a 1024x1024 source image with sips validation |
+
+### Swift Packages (1)
+
+| Tool | Description |
+|------|-------------|
+| `create-swift-package` | Create Swift Package with swift package init and manifest customization |
+
+### Documentation (1)
+
+| Tool | Description |
+|------|-------------|
+| `build-documentation` | Build DocC documentation with optional static HTML export |
+
+### Accessibility (1)
+
+| Tool | Description |
+|------|-------------|
+| `audit-accessibility` | Run accessibility audit on simulator app |
+
+### App Size Analysis (1)
+
+| Tool | Description |
+|------|-------------|
+| `analyze-app-size` | Analyze .app, .ipa, or .xcarchive size breakdown by category |
+
+### StoreKit (1)
+
+| Tool | Description |
+|------|-------------|
+| `manage-storekit-config` | Create and manage .storekit configuration files for in-app purchases |
+
+### Code Generation (1)
+
+| Tool | Description |
+|------|-------------|
+| `generate-code-snippet` | Generate Swift code from 8 templates (MVVM, Codable, SwiftUI View, etc.) |
+
+### pbxproj Conflicts (1)
+
+| Tool | Description |
+|------|-------------|
+| `resolve-pbxproj-conflicts` | Resolve merge conflicts in .pbxproj files (union/ours/theirs strategies) |
+
+### App Store Connect (1)
+
+| Tool | Description |
+|------|-------------|
+| `query-appstore-connect` | Query App Store Connect API (apps, builds, TestFlight, reviews, finances) |
+
+### App Metadata (2)
+
+| Tool | Description |
+|------|-------------|
+| `manage-app-metadata` | Read and update App Store listings (description, keywords, release notes) |
+| `manage-screenshots` | Upload and manage App Store screenshots and previews |
+
+### Push Certificates (1)
+
+| Tool | Description |
+|------|-------------|
+| `manage-push-certificates` | Manage APNs keys: list, create, validate, test push, convert .p12 |
+
+### Xcode Cloud (1)
+
+| Tool | Description |
+|------|-------------|
+| `manage-xcode-cloud` | Manage Xcode Cloud CI/CD: workflows, builds, artifacts, and logs |
+
 ## Resources & Prompts
 
 The server also provides MCP resources for direct data access (`xcode://project/current`, `xcode://sdks`, `xcode://certificates`, `xcode://profiles`, `xcode://simulators`) and workflow prompts for common tasks like creating apps, fixing build errors, preparing App Store submissions, and setting up CI/CD pipelines.
@@ -276,7 +402,7 @@ The server also provides MCP resources for direct data access (`xcode://project/
   src/
     index.ts              # Server entry point (StdioServerTransport)
     types.ts              # Shared TypeScript types
-    tools/                # 12 tool modules (64 tools total)
+    tools/                # 31 tool modules (100 tools total)
     resources/            # MCP resource providers
     prompts/              # Workflow prompt templates
     utils/
@@ -312,7 +438,7 @@ See the [Developer Guide](docs/DEVELOPMENT.md) for detailed instructions on exte
 
 ### Highlights
 
-- **64 Tools** fuer alle Aspekte der Apple-Entwicklung
+- **100 Tools** fuer alle Aspekte der Apple-Entwicklung -- von der Idee bis zur App Store-Veroeffentlichung
 - **Claude Desktop** als empfohlene Methode -- einfach installieren und loslegen
 - **Automatische Installation** mit einem einzigen Befehl (inkl. Xcode, Claude Desktop und Simulator-Einrichtung)
 - **Xcode 26+ kompatibel** -- erkennt automatisch fehlende SDKs und Simulator-Runtimes
@@ -320,6 +446,10 @@ See the [Developer Guide](docs/DEVELOPMENT.md) for detailed instructions on exte
 - **Visuelles Debugging** -- Claude kann Simulator-Screenshots sehen und UI-Probleme erkennen
 - **Dateisystem-Zugriff** -- Claude kann Swift-Quelldateien direkt ins Projekt schreiben
 - **CI/CD-Generierung** fuer GitHub Actions, GitLab CI und Fastlane
+- **Physische Geraete** -- Build, Deploy und Logs auf echten iPhones/iPads
+- **App Store Connect** -- Metadata, Screenshots, TestFlight und Xcode Cloud direkt steuern
+- **Code-Qualitaet** -- SwiftLint, SwiftFormat, Accessibility-Audits und App-Size-Analyse
+- **Crash-Analyse** -- Crash-Reports lesen und symbolisieren
 
 ### Schnellstart
 
