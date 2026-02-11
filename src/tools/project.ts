@@ -1,9 +1,9 @@
 import { ToolResult, ToolHandler, Platform, Language } from '../types.js';
 import { execCommand, execXcode } from '../utils/exec.js';
 import { logger } from '../utils/logger.js';
-import { findProjectPath, getXcodePath } from '../utils/paths.js';
-import { writeFileSync, mkdirSync, existsSync } from 'fs';
-import { join, resolve, dirname } from 'path';
+import { findProjectPath, getXcodePath, registerProject, ensureSafeProjectPath, DEFAULT_PROJECTS_DIR } from '../utils/paths.js';
+import { writeFileSync, mkdirSync, existsSync, readdirSync, readFileSync, unlinkSync } from 'fs';
+import { join, resolve, dirname, basename } from 'path';
 
 /**
  * Tool definition interface
@@ -49,7 +49,7 @@ const createProject: ToolDefinition = {
       },
       outputPath: {
         type: 'string',
-        description: 'Directory to create project in. Defaults to current directory.',
+        description: `Directory to create project in. Defaults to ~/Developer/. Paths in /tmp are automatically redirected to ~/Developer/ to prevent data loss on reboot.`,
       },
     },
     required: ['name', 'platform', 'language', 'bundleId'],
@@ -63,12 +63,15 @@ const createProject: ToolDefinition = {
       const language = args.language as Language;
       const bundleId = args.bundleId as string;
       const organizationName = (args.organizationName as string) || 'coolblack';
-      const outputPath = (args.outputPath as string) || process.cwd();
+      const rawOutputPath = (args.outputPath as string) || DEFAULT_PROJECTS_DIR;
 
       logger.info(`Creating project: ${name} for ${platform}`);
 
+      // Ensure the project path is safe (not in /tmp or other volatile directories)
+      const { path: safeOutputPath, wasRedirected, warning } = ensureSafeProjectPath(rawOutputPath, name);
+
       // Ensure output directory exists
-      const projectDir = resolve(outputPath, name);
+      const projectDir = resolve(safeOutputPath, safeOutputPath.endsWith(name) ? '' : name);
       if (!existsSync(projectDir)) {
         mkdirSync(projectDir, { recursive: true });
       }
@@ -113,6 +116,16 @@ const createProject: ToolDefinition = {
 
       logger.info(`Project created successfully at ${projectDir}`);
 
+      // Register project in the project registry
+      const projectFile = join(projectDir, `${name}.xcodeproj`);
+      registerProject(name, {
+        path: projectDir,
+        projectFile,
+        bundleId,
+        platform,
+        scheme: name,
+      });
+
       return {
         success: true,
         data: {
@@ -124,6 +137,7 @@ const createProject: ToolDefinition = {
           sourceDir: srcDir,
           projectYmlPath,
           message: `Project '${name}' created successfully`,
+          ...(wasRedirected ? { warning, redirectedFrom: rawOutputPath } : {}),
         },
         executionTime: Date.now() - startTime,
       };
@@ -693,6 +707,138 @@ int main(int argc, const char * argv[]) {
 }
 
 /**
+ * add-target — Add a new target (Widget, Watch, App Clip, etc.) via XcodeGen
+ */
+const addTarget: ToolDefinition = {
+  name: 'add-target',
+  description: 'Add a new target (Widget Extension, Watch App, App Clip, etc.) to an existing project via XcodeGen YAML modification and regeneration.',
+  inputSchema: {
+    type: 'object',
+    properties: {
+      projectPath: { type: 'string', description: 'Path to the project directory containing project.yml' },
+      targetName: { type: 'string', description: 'Name of the new target' },
+      targetType: {
+        type: 'string',
+        enum: ['widget-extension', 'watch-app', 'app-clip', 'framework', 'test', 'intent-extension', 'notification-extension'],
+        description: 'Type of target to add',
+      },
+      bundleId: { type: 'string', description: 'Bundle ID for the new target' },
+      platform: { type: 'string', enum: ['iOS', 'macOS', 'watchOS', 'tvOS', 'visionOS'], description: 'Target platform (default: iOS)' },
+    },
+    required: ['projectPath', 'targetName', 'targetType', 'bundleId'],
+  },
+  handler: async (args: Record<string, unknown>): Promise<ToolResult> => {
+    const startTime = Date.now();
+    try {
+      const projectPath = args.projectPath as string;
+      const targetName = args.targetName as string;
+      const targetType = args.targetType as string;
+      const bundleId = args.bundleId as string;
+      const platform = (args.platform as string) || 'iOS';
+      const projectYmlPath = join(projectPath, 'project.yml');
+
+      if (!existsSync(projectYmlPath)) {
+        return { success: false, error: `project.yml nicht gefunden in ${projectPath}`, data: null, executionTime: Date.now() - startTime };
+      }
+
+      logger.info(`Adding target ${targetName} (${targetType}) to ${projectPath}`);
+
+      const existingYml = readFileSync(projectYmlPath, 'utf-8');
+      const typeMap: Record<string, { type: string; sdk?: string }> = {
+        'widget-extension': { type: 'app-extension' }, 'watch-app': { type: 'application', sdk: 'watchOS' },
+        'app-clip': { type: 'application' }, 'framework': { type: 'framework' }, 'test': { type: 'bundle.unit-test' },
+        'intent-extension': { type: 'app-extension' }, 'notification-extension': { type: 'app-extension' },
+      };
+      const targetConfig = typeMap[targetType] || { type: 'app-extension' };
+
+      const targetSrcDir = join(projectPath, targetName);
+      if (!existsSync(targetSrcDir)) { mkdirSync(targetSrcDir, { recursive: true }); }
+      writeFileSync(join(targetSrcDir, `${targetName}.swift`), `import Foundation\n\n// ${targetName} target\n`);
+
+      const targetYml = `\n  ${targetName}:\n    type: ${targetConfig.type}\n    supportedDestinations: [${targetConfig.sdk || platform}]\n    sources:\n      - ${targetName}\n    settings:\n      PRODUCT_NAME: ${targetName}\n      PRODUCT_BUNDLE_IDENTIFIER: ${bundleId}\n    info:\n      path: ${targetName}/Info.plist\n      properties:\n        CFBundleName: ${targetName}\n        CFBundleDisplayName: ${targetName}\n        CFBundleShortVersionString: "1.0"\n        CFBundleVersion: "1"\n`;
+      writeFileSync(projectYmlPath, existingYml + targetYml);
+
+      const genResult = await execCommand('xcodegen', ['generate', '--spec', projectYmlPath], { cwd: projectPath });
+      if (genResult.exitCode !== 0) {
+        return { success: false, error: `XcodeGen-Regenerierung fehlgeschlagen: ${genResult.stderr}`, data: null, executionTime: Date.now() - startTime };
+      }
+
+      return { success: true, data: { targetName, targetType, bundleId, platform: targetConfig.sdk || platform, sourceDir: targetSrcDir, message: `Target "${targetName}" erfolgreich hinzugefuegt` }, executionTime: Date.now() - startTime };
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      logger.error('Error in add-target:', error);
+      return { success: false, error: `Fehler beim Hinzufuegen des Targets: ${errorMsg}`, data: null, executionTime: Date.now() - startTime };
+    }
+  },
+};
+
+/**
+ * manage-scheme — List, create, or delete shared schemes
+ */
+const manageScheme: ToolDefinition = {
+  name: 'manage-scheme',
+  description: 'List, create, or delete shared Xcode schemes in xcshareddata/xcschemes/.',
+  inputSchema: {
+    type: 'object',
+    properties: {
+      projectPath: { type: 'string', description: 'Path to .xcodeproj directory' },
+      action: { type: 'string', enum: ['list', 'create', 'delete', 'show'], description: 'Action to perform' },
+      schemeName: { type: 'string', description: 'Name of the scheme (for create/delete/show)' },
+      targetName: { type: 'string', description: 'Target to associate with the scheme (for create action)' },
+    },
+    required: ['projectPath', 'action'],
+  },
+  handler: async (args: Record<string, unknown>): Promise<ToolResult> => {
+    const startTime = Date.now();
+    try {
+      const projectPath = args.projectPath as string;
+      const action = args.action as string;
+      const schemeName = args.schemeName as string | undefined;
+      const targetName = args.targetName as string | undefined;
+      const schemesDir = join(projectPath, 'xcshareddata', 'xcschemes');
+
+      if (action === 'list') {
+        if (!existsSync(schemesDir)) {
+          return { success: true, data: { schemes: [], count: 0 }, executionTime: Date.now() - startTime };
+        }
+        const schemes = readdirSync(schemesDir).filter((f) => f.endsWith('.xcscheme')).map((f) => f.replace('.xcscheme', ''));
+        return { success: true, data: { schemes, count: schemes.length, schemesDir }, executionTime: Date.now() - startTime };
+      }
+
+      if (!schemeName) {
+        return { success: false, error: 'schemeName ist erforderlich', data: null, executionTime: Date.now() - startTime };
+      }
+      const schemeFile = join(schemesDir, `${schemeName}.xcscheme`);
+
+      if (action === 'show') {
+        if (!existsSync(schemeFile)) return { success: false, error: `Scheme "${schemeName}" nicht gefunden`, data: null, executionTime: Date.now() - startTime };
+        return { success: true, data: { schemeName, content: readFileSync(schemeFile, 'utf-8') }, executionTime: Date.now() - startTime };
+      }
+
+      if (action === 'delete') {
+        if (!existsSync(schemeFile)) return { success: false, error: `Scheme "${schemeName}" nicht gefunden`, data: null, executionTime: Date.now() - startTime };
+        unlinkSync(schemeFile);
+        return { success: true, data: { schemeName, message: `Scheme "${schemeName}" geloescht` }, executionTime: Date.now() - startTime };
+      }
+
+      if (action === 'create') {
+        const target = targetName || schemeName;
+        if (!existsSync(schemesDir)) mkdirSync(schemesDir, { recursive: true });
+        const schemeXml = `<?xml version="1.0" encoding="UTF-8"?>\n<Scheme LastUpgradeVersion="1500" version="1.7">\n   <BuildAction parallelizeBuildables="YES" buildImplicitDependencies="YES">\n      <BuildActionEntries>\n         <BuildActionEntry buildForTesting="YES" buildForRunning="YES" buildForProfiling="YES" buildForArchiving="YES" buildForAnalyzing="YES">\n            <BuildableReference BuildableIdentifier="primary" BlueprintName="${target}" ReferencedContainer="container:${basename(projectPath)}" />\n         </BuildActionEntry>\n      </BuildActionEntries>\n   </BuildAction>\n   <TestAction buildConfiguration="Debug" selectedDebuggerIdentifier="Xcode.DebuggerFoundation.Debugger.LLDB" selectedLauncherIdentifier="Xcode.DebuggerFoundation.Launcher.LLDB" shouldUseLaunchSchemeArgsEnv="YES" />\n   <LaunchAction buildConfiguration="Debug" selectedDebuggerIdentifier="Xcode.DebuggerFoundation.Debugger.LLDB" selectedLauncherIdentifier="Xcode.DebuggerFoundation.Launcher.LLDB" launchStyle="0" useCustomWorkingDirectory="NO" ignoresPersistentStateOnLaunch="NO" debugDocumentVersioning="YES" debugServiceExtension="internal" allowLocationSimulation="YES" />\n   <ProfileAction buildConfiguration="Release" shouldUseLaunchSchemeArgsEnv="YES" savedToolIdentifier="" useCustomWorkingDirectory="NO" debugDocumentVersioning="YES" />\n   <AnalyzeAction buildConfiguration="Debug" />\n   <ArchiveAction buildConfiguration="Release" revealArchiveInOrganizer="YES" />\n</Scheme>`;
+        writeFileSync(schemeFile, schemeXml);
+        return { success: true, data: { schemeName, targetName: target, path: schemeFile, message: `Scheme "${schemeName}" erstellt` }, executionTime: Date.now() - startTime };
+      }
+
+      return { success: false, error: `Unbekannte Aktion: ${action}`, data: null, executionTime: Date.now() - startTime };
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      logger.error('Error in manage-scheme:', error);
+      return { success: false, error: `Fehler bei Scheme-Operation: ${errorMsg}`, data: null, executionTime: Date.now() - startTime };
+    }
+  },
+};
+
+/**
  * Export all project tools
  */
 export const tools: ToolDefinition[] = [
@@ -701,6 +847,8 @@ export const tools: ToolDefinition[] = [
   listSchemes,
   modifyProject,
   generateFromYaml,
+  addTarget,
+  manageScheme,
 ];
 
 export default tools;

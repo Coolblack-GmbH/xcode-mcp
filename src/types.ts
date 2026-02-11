@@ -170,6 +170,45 @@ export interface ArchiveInfo {
   size: number;
 }
 
+// Physical device
+export interface PhysicalDevice {
+  udid: string;
+  name: string;
+  model: string;
+  osVersion: string;
+  connectionType: string;
+  state: string;
+}
+
+// Crash report summary
+export interface CrashReportSummary {
+  fileName: string;
+  path: string;
+  appName: string;
+  date: string;
+  size: number;
+}
+
+// Lint violation
+export interface LintViolation {
+  file: string;
+  line: number;
+  column: number;
+  severity: 'Warning' | 'Error';
+  type: string;
+  rule_id: string;
+  reason: string;
+}
+
+// Localization status
+export interface LocalizationStatus {
+  locale: string;
+  total: number;
+  translated: number;
+  missing: number;
+  coverage: number;
+}
+
 // Helper type for tool handler functions
 export type ToolHandler = (args: Record<string, unknown>) => Promise<ToolResult>;
 

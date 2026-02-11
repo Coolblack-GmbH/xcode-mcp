@@ -15,6 +15,25 @@ import { profilingTools } from './profiling.js';
 import { utilityTools } from './utility.js';
 import { cicdTools } from './cicd.js';
 import { filesystemTools } from './filesystem.js';
+import { deviceTools } from './devices.js';
+import { versioningTools } from './versioning.js';
+import { plistTools } from './plist.js';
+import { crashTools } from './crashes.js';
+import { lintingTools } from './linting.js';
+import { localizationTools } from './localization.js';
+import { privacyTools } from './privacy.js';
+import { assetTools } from './assets.js';
+import { swiftPackageTools } from './swiftpackage.js';
+import { documentationTools } from './documentation.js';
+import { accessibilityTools } from './accessibility.js';
+import { appSizeTools } from './appsize.js';
+import { storekitTools } from './storekit.js';
+import { codegenTools } from './codegen.js';
+import { pbxprojTools } from './pbxproj.js';
+import { appStoreConnectTools } from './appstoreconnect.js';
+import { appMetadataTools } from './appmetadata.js';
+import { pushCertTools } from './pushcerts.js';
+import { xcodeCloudTools } from './xcodecloud.js';
 
 // Import types
 import { ToolResult, ToolHandler } from '../types.js';
@@ -46,6 +65,25 @@ export function registerTools(server: Server): void {
     ...utilityTools,
     ...cicdTools,
     ...filesystemTools,
+    ...deviceTools,
+    ...versioningTools,
+    ...plistTools,
+    ...crashTools,
+    ...lintingTools,
+    ...localizationTools,
+    ...privacyTools,
+    ...assetTools,
+    ...swiftPackageTools,
+    ...documentationTools,
+    ...accessibilityTools,
+    ...appSizeTools,
+    ...storekitTools,
+    ...codegenTools,
+    ...pbxprojTools,
+    ...appStoreConnectTools,
+    ...appMetadataTools,
+    ...pushCertTools,
+    ...xcodeCloudTools,
   ];
 
   logger.info(`Registering ${allTools.length} tools`);
